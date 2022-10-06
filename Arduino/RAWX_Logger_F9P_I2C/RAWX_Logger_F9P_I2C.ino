@@ -679,11 +679,11 @@ void setup()
     base_mode = false; // Clear base_mode flag
     Serial.println("ROVER mode selected");
     // Select one mode for the mobile Rover Logger
-    //setNAVportable(); // Set Portable Navigation Mode
+    setNAVportable(); // Set Portable Navigation Mode
     //setNAVpedestrian(); // Set Pedestrian Navigation Mode
     //setNAVautomotive(); // Set Automotive Navigation Mode
     //setNAVsea(); // Set Sea Navigation Mode
-    setNAVair1g(); // Set Airborne <1G Navigation Mode
+    //setNAVair1g(); // Set Airborne <1G Navigation Mode
     //setNAVair2g(); // Set Airborne <2G Navigation Mode
     //setNAVair4g(); // Set Airborne <4G Navigation Mode
     //setNAVwrist(); // Set Wrist Navigation Mode
@@ -829,9 +829,9 @@ void loop() // run over and over again
           //setRATE_20Hz(); // Set Navigation/Measurement Rate to 20 Hz
           //setRATE_10Hz(); // Set Navigation/Measurement Rate to 10 Hz
           //setRATE_5Hz(); // Set Navigation/Measurement Rate to 5 Hz
-          setRATE_4Hz(); // Set Navigation/Measurement Rate to 4 Hz
+          //setRATE_4Hz(); // Set Navigation/Measurement Rate to 4 Hz
           //setRATE_2Hz(); // Set Navigation/Measurement Rate to 2 Hz
-          //setRATE_1Hz(); // Set Navigation/Measurement Rate to 1 Hz
+          setRATE_1Hz(); // Set Navigation/Measurement Rate to 1 Hz
           
           // If we are in BASE mode, check the SURVEY_IN pin
           if (base_mode == true) {
