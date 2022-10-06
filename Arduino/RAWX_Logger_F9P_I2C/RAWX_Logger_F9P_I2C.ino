@@ -703,7 +703,7 @@ void setup()
   // Initialise SD card
   Serial.println("Initializing SD card...");
   // See if the SD card is present and can be initialized
-  if (!sd.begin(cardSelect, SD_SCK_MHZ(50))) {
+  if (!sd.begin(cardSelect, SD_SCK_MHZ(10))) {  // SPI bus speed limited to 10 MHz to avoid data corruption on SD card
     Serial.println("Panic!! SD Card Init failed, or not present!");
     Serial.println("Waiting for reset...");
 #ifndef NoLED
