@@ -377,10 +377,16 @@ uint8_t setTimeGrid() {
   return i2cGNSS.setVal8(0x2005000c, 0x01, VAL_LAYER_RAM);
 }
 
-// Enable NMEA messages on UART2 for test purposes
+// Enable NMEA messages on UART2 for BlueTooth transmission (to smartphone for instance)
 // UBX-CFG-VALSET message with key ID of 0x10760002 (CFG-UART2OUTPROT-NMEA) and value of 1:
 uint8_t setUART2nmea() {
   return i2cGNSS.setVal8(0x10760002, 0x01, VAL_LAYER_RAM);
+}
+
+// Enable NMEA GST sentence on UART2, to give position data to smartphone
+// UBX-CFG-VALSET message with key ID of 0x209100d5 (CFG-MSGOUT-NMEA_ID_GST_UART2) and value of 1:
+uint8_t setUART2nmea_gst() {
+  return i2cGNSS.setVal8(0x209100d5, 0x01, VAL_LAYER_RAM);
 }
 
 // ExtInt interrupt service routine
@@ -655,6 +661,9 @@ void setup()
   response &= setUART2BAUD_115200(); // Set UART2 Baud rate
   response &= disableSurveyIn(); // Disable Survey_In mode
   response &= setRTCMoff(); // Disable RTCM output on UART2
+  response &= setUART2nmea_gst(); // Enable NMEA GST sentences output on UART2
+  response &= setUART2nmea(); // Enable NMEA output on UART2
+  Serial.println("NMEA enabled on uart2");
   response &= setTimeGrid(); // Set the TP1 TimeGrid to GPS so TIM_TM2 messages are aligned with GPS time
 
   if (response == false) {
