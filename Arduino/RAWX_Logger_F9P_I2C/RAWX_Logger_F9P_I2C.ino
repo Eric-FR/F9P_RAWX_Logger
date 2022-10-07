@@ -262,6 +262,9 @@ uint8_t setNAVair1g() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x06, 
 uint8_t setNAVair2g() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x07, VAL_LAYER_RAM); };
 uint8_t setNAVair4g() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x08, VAL_LAYER_RAM); };
 uint8_t setNAVwrist() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x09, VAL_LAYER_RAM); };
+uint8_t setNAVbike() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x0a, VAL_LAYER_RAM); };
+uint8_t setNAVrobotic() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x0b, VAL_LAYER_RAM); };
+uint8_t setNAVescooter() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x0c, VAL_LAYER_RAM); };
 
 // Set UART2 to 230400 Baud
 uint8_t setUART2BAUD_230400() {
