@@ -1,12 +1,14 @@
 // RAWX_Logger_F9P_I2C
 
-// Logs RXM-RAWX, RXM-SFRBX and TIM-TM2 data from u-blox ZED_F9P GNSS to SD card
-// Also logs NAV_PVT messages (which provide the carrSoln status) and NAV-STATUS messages (which indicate a time fix for Survey_In mode)
+// Logs RXM-RAWX, RXM-SFRBX and TIM-TM2 data from u-blox ZED_F9P GNSS and ZED_F9R HPS GNSS to SD card
+// Also logs NAV-PVT messages (which provide the carrSoln status) and NAV-STATUS messages (which indicate a time fix for Survey_In mode)
+// Also logs NAV-ATT messages (outputs the attitude solution as roll, pitch and heading angles)
 // Also logs high precision NMEA GNGGA position solution messages which can be extracted by RTKLIB
 
 // This version uses the SparkFun u-blox library by Nate Seidle to configure the RAWX messages via I2C, leaving the UART dedicated for the messages to be logged to SD card
 // Feel like supporting open source hardware? Buy a board from SparkFun!
 // ZED-F9P RTK2: https://www.sparkfun.com/products/15136
+// ZED-F9R Dead Reckoning: https://www.sparkfun.com/products/16344
 
 // This code is written for the Adalogger M0 Feather
 // https://www.adafruit.com/products/2796
@@ -15,6 +17,9 @@
 
 // Choose a good quality SD card. Some cheap cards can't handle the write rate.
 // Ensure the card is formatted as FAT32.
+
+// Choose between F9P and F9R
+//#define F9R // Comment this line out to use F9R instead of F9P
 
 // Changes to a new log file every INTERVAL minutes
 
@@ -96,7 +101,9 @@ char rawx_filename[] = "20000000/b_000000.ubx"; // the b will be replaced by an 
 char dirname[] = "20000000";
 long bytes_written = 0;
 
+#ifndef F9R
 bool survey_in_mode = false; // Flag to indicate if the code is in survey_in mode
+#endif
 
 // Timer to indicate if an ExtInt has been received
 volatile unsigned long ExtIntTimer; // Load this with millis plus white_flash to show when the ExtInt LED should be switched off
@@ -196,6 +203,9 @@ uint8_t setRAWXoff() {
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_TIM_TM2_UART1, 0x00);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_POSLLH_UART1, 0x00);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_PVT_UART1, 0x00);
+#ifdef F9R  
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_ATT_UART1, 0x00);
+#endif  
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_STATUS_UART1, 0x00);
   i2cGNSS.addCfgValset8(UBLOX_CFG_NMEA_MAINTALKERID, 0x01);    // This line sets the main talker ID to GP
   i2cGNSS.addCfgValset8(UBLOX_CFG_NMEA_HIGHPREC, 0x00);    // This line disables NMEA high precision mode
@@ -211,6 +221,9 @@ uint8_t setRAWXon() {
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_TIM_TM2_UART1, 0x01);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_POSLLH_UART1, 0x01);   // Change the last byte from 0x01 to 0x00 to leave NAV_POSLLH disabled
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_PVT_UART1, 0x01);   // Change the last byte from 0x01 to 0x00 to leave NAV_PVT disabled
+#ifdef F9R  
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_ATT_UART1, 0x01);   // Change the last byte from 0x01 to 0x00 to leave NAV_ATT disabled
+#endif  
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_STATUS_UART1, 0x01);   // This line enables the NAV_STATUS message
   i2cGNSS.addCfgValset8(UBLOX_CFG_NMEA_MAINTALKERID, 0x03);   // This line sets the main talker ID to GN
   i2cGNSS.addCfgValset8(UBLOX_CFG_NMEA_HIGHPREC, 0x01);   // This sets the NMEA high precision mode
@@ -276,6 +289,7 @@ uint8_t setUART2BAUD_115200() {
   return i2cGNSS.setVal32(UBLOX_CFG_UART2_BAUDRATE, 0x0001c200, VAL_LAYER_RAM);
 }
 
+#ifndef F9R
 // Set Survey_In mode
 uint8_t setSurveyIn() {
   i2cGNSS.newCfgValset8(UBLOX_CFG_TMODE_MODE, 0x01, VAL_LAYER_RAM);
@@ -311,6 +325,7 @@ uint8_t setRTCMoff() {
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1097_UART2, 0x00);
   return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1230_UART2, 0x00);
 }
+#endif
 
 // Set TimeGrid for TP1 to GPS (instead of UTC) so TIM_TM2 messages are aligned with GPS time
 uint8_t setTimeGrid() {
@@ -532,15 +547,21 @@ void setup()
   attachInterrupt(ExtIntPin, ExtInt, FALLING);
   ExtIntTimer = millis(); // Initialise the ExtInt LED timer
 
+#ifndef F9R
   // initialise SurveyInPin (A3) as an input for the SURVEY_IN switch
   pinMode(SurveyInPin, INPUT_PULLUP);
+#endif
 
   delay(10000); // Allow 10 sec for user to open serial monitor (Comment this line if required)
   //while (!Serial); // OR Wait for user to run python script or open serial monitor (Comment this line as required)
 
   Serial.begin(115200);
 
+#ifdef F9R
+  Serial.println("RAWX Logger F9R");
+#else
   Serial.println("RAWX Logger F9P");
+#endif
   Serial.println("Log GNSS RAWX data to SD card");
 #ifndef NeoPixel
   Serial.println("Green LED = Initial GNSS Fix");
@@ -597,8 +618,10 @@ void setup()
   response &= setTALKERID(); // Set NMEA TALKERID to GP
   response &= setRATE_1Hz(); // Set Navigation/Measurement Rate to 1Hz
   response &= setUART2BAUD_115200(); // Set UART2 Baud rate
+#ifndef F9R
   response &= disableSurveyIn(); // Disable Survey_In mode
   response &= setRTCMoff(); // Disable RTCM output on UART2
+#endif  
   response &= setUART2nmea_gst(); // Enable NMEA GST sentences output on UART2
   response &= setUART2nmea(); // Enable NMEA output on UART2
   Serial.println("NMEA enabled on uart2");
@@ -780,6 +803,7 @@ void loop() // run over and over again
           //setRATE_2Hz(); // Set Navigation/Measurement Rate to 2 Hz
           setRATE_1Hz(); // Set Navigation/Measurement Rate to 1 Hz
           
+#ifndef F9R
           // If we are in BASE mode, check the SURVEY_IN pin
           if (base_mode == true) {
             if (digitalRead(SurveyInPin) == LOW) {
@@ -792,6 +816,7 @@ void loop() // run over and over again
               delay(1100);
             }
           }
+#endif
           
           while(Serial1.available()){Serial1.read();} // Flush RX buffer to clear UBX acknowledgements
 
@@ -1074,6 +1099,7 @@ void loop() // run over and over again
           // TIM_TM2 is class 0x0d ID 0x03
           // NAV_POSLLH is class 0x01 ID 0x02
           // NAV_PVT is class 0x01 ID 0x07
+          // NAV_ATT is class 0x01 ID 0x05
           // NAV-STATUS is class 0x01 ID 0x03
           case (looking_for_class): {
             ubx_class = c;
@@ -1104,7 +1130,7 @@ void loop() // run over and over again
               Serial.println("Panic!! Was expecting ID of 0x03 but did not receive one!");
               ubx_nmea_state = sync_lost;
             }
-            else if ((ubx_class == 0x01) and ((ubx_ID != 0x02) and (ubx_ID != 0x07) and (ubx_ID != 0x03))) {
+            else if ((ubx_class == 0x01) and ((ubx_ID != 0x02) and (ubx_ID != 0x07) and (ubx_ID != 0x05) and (ubx_ID != 0x03))) {
               Serial.println("Panic!! Was expecting ID of 0x02 or 0x07 or 0x03 but did not receive one!");
               ubx_nmea_state = sync_lost;
             }
