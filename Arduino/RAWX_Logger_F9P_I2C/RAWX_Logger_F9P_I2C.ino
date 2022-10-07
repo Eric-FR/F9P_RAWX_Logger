@@ -179,214 +179,149 @@ int nmea_expected_csum2 = '0';
 // Definitions for u-blox F9P UBX-format (binary) messages
 
 // Disable NMEA output on the I2C port
-// UBX-CFG-VALSET message with a key ID of 0x10720002 (CFG-I2COUTPROT-NMEA) and a value of 0
 uint8_t disableI2cNMEA() {
-  return i2cGNSS.setVal8(0x10720002, 0x00, VAL_LAYER_RAM);
+  return i2cGNSS.setVal8(UBLOX_CFG_I2COUTPROT_NMEA, 0x00, VAL_LAYER_RAM);
 }
 
-// Set UART1 to 230400 Baud
-// UBX-CFG-VALSET message with a key ID of 0x40520001 (CFG-UART1-BAUDRATE) and a value of 0x00038400 (230400 decimal)
+// Set UART1 to 230400 Baud (0x00038400)
 uint8_t setUART1BAUD() {
-  return i2cGNSS.setVal32(0x40520001, 0x00038400, VAL_LAYER_RAM);
+  return i2cGNSS.setVal32(UBLOX_CFG_UART1_BAUDRATE, 0x00038400, VAL_LAYER_RAM);
 }
 // setRAWXoff: this is the message which disables all of the messages being logged to SD card
 // It also clears the NMEA high precision mode for the GPGGA message
 // It also sets the main talker ID to 'GP'
-// UBX-CFG-VALSET message with key IDs of:
-// 0x209102a5 (CFG-MSGOUT-UBX_RXM_RAWX_UART1)
-// 0x20910232 (CFG-MSGOUT-UBX_RXM_SFRBX_UART1)
-// 0x20910179 (CFG-MSGOUT-UBX_TIM_TM2_UART1)
-// 0x2091002a (CFG-MSGOUT-UBX_NAV_POSLLH_UART1)
-// 0x20910007 (CFG-MSGOUT-UBX_NAV_PVT_UART1)
-// 0x2091001b (CFG-MSGOUT-UBX_NAV_STATUS_UART1)
-// 0x10930006 (CFG-NMEA-HIGHPREC)
-// 0x209100bb (CFG-MSGOUT-NMEA_ID_GGA_UART1)
-// and values (rates) of zero
-// 0x20930031 (CFG-NMEA-MAINTALKERID) has value 1 (GP)
 uint8_t setRAWXoff() {
-  i2cGNSS.newCfgValset8(0x209102a5, 0x00, VAL_LAYER_RAM);    // CFG-MSGOUT-UBX_RXM_RAWX_UART1
-  i2cGNSS.addCfgValset8(0x20910232, 0x00);    // CFG-MSGOUT-UBX_RXM_SFRBX_UART1
-  i2cGNSS.addCfgValset8(0x20910179, 0x00);    // CFG-MSGOUT-UBX_TIM_TM2_UART1
-  i2cGNSS.addCfgValset8(0x2091002a, 0x00);    // CFG-MSGOUT-UBX_NAV_POSLLH_UART1
-  i2cGNSS.addCfgValset8(0x20910007, 0x00);    // CFG-MSGOUT-UBX_NAV_PVT_UART1
-  i2cGNSS.addCfgValset8(0x2091001b, 0x00);    // CFG-MSGOUT-UBX_NAV_STATUS_UART1
-  i2cGNSS.addCfgValset8(0x20930031, 0x01);    // CFG-NMEA-MAINTALKERID : This line sets the main talker ID to GP
-  i2cGNSS.addCfgValset8(0x10930006, 0x00);    // CFG-NMEA-HIGHPREC : This line disables NMEA high precision mode
-  return i2cGNSS.sendCfgValset8(0x209100bb, 0x00);  // CFG-MSGOUT-NMEA_ID_GGA_UART1 : This line disables the GGA message
+  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_UBX_RXM_RAWX_UART1, 0x00, VAL_LAYER_RAM);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_RXM_SFRBX_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_TIM_TM2_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_POSLLH_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_PVT_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_STATUS_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_NMEA_MAINTALKERID, 0x01);    // This line sets the main talker ID to GP
+  i2cGNSS.addCfgValset8(UBLOX_CFG_NMEA_HIGHPREC, 0x00);    // This line disables NMEA high precision mode
+  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GGA_UART1, 0x00);  // This line disables the GGA message
 }
 
 // setRAWXon: this is the message which enables all of the messages to be logged to SD card in one go
 // It also sets the NMEA high precision mode for the GNGGA message
 // It also sets the main talker ID to 'GN'
-// UBX-CFG-VALSET message with key IDs of:
-// 0x209102a5 (CFG-MSGOUT-UBX_RXM_RAWX_UART1)
-// 0x20910232 (CFG-MSGOUT-UBX_RXM_SFRBX_UART1)
-// 0x20910179 (CFG-MSGOUT-UBX_TIM_TM2_UART1)
-// 0x2091002a (CFG-MSGOUT-UBX_NAV_POSLLH_UART1)
-// 0x20910007 (CFG-MSGOUT-UBX_NAV_PVT_UART1)
-// 0x2091001b (CFG-MSGOUT-UBX_NAV_STATUS_UART1)
-// 0x10930006 (CFG-NMEA-HIGHPREC)
-// 0x209100bb (CFG-MSGOUT-NMEA_ID_GGA_UART1)
-// and values (rates) of 1
-// 0x20930031 (CFG-NMEA-MAINTALKERID) has value 3 (GN)
 uint8_t setRAWXon() {
-  i2cGNSS.newCfgValset8(0x209102a5, 0x01, VAL_LAYER_RAM);
-  i2cGNSS.addCfgValset8(0x20910232, 0x01);
-  i2cGNSS.addCfgValset8(0x20910179, 0x01);
-  i2cGNSS.addCfgValset8(0x2091002a, 0x00);   // Change the last byte from 0x01 to 0x00 to leave NAV_POSLLH disabled
-  i2cGNSS.addCfgValset8(0x20910007, 0x01);   // Change the last byte from 0x01 to 0x00 to leave NAV_PVT disabled
-  i2cGNSS.addCfgValset8(0x2091001b, 0x01);   // This line enables the NAV_STATUS message
-  i2cGNSS.addCfgValset8(0x20930031, 0x03);   // This line sets the main talker ID to GN
-  i2cGNSS.addCfgValset8(0x10930006, 0x01);   // This sets the NMEA high precision mode
-  return i2cGNSS.sendCfgValset8(0x209100bb, 0x01); // This (re)enables the GGA mesage
+  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_UBX_RXM_RAWX_UART1, VAL_LAYER_RAM);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_RXM_SFRBX_UART1, 0x01);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_TIM_TM2_UART1, 0x01);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_POSLLH_UART1, 0x01);   // Change the last byte from 0x01 to 0x00 to leave NAV_POSLLH disabled
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_PVT_UART1, 0x01);   // Change the last byte from 0x01 to 0x00 to leave NAV_PVT disabled
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_STATUS_UART1, 0x01);   // This line enables the NAV_STATUS message
+  i2cGNSS.addCfgValset8(UBLOX_CFG_NMEA_MAINTALKERID, 0x03);   // This line sets the main talker ID to GN
+  i2cGNSS.addCfgValset8(UBLOX_CFG_NMEA_HIGHPREC, 0x01);   // This sets the NMEA high precision mode
+  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GGA_UART1, 0x01); // This (re)enables the GGA mesage
 }
 
 // Enable the NMEA GGA and RMC messages on UART1
-// UBX-CFG-VALSET message with key IDs of:
-// 0x209100ca (CFG-MSGOUT-NMEA_ID_GLL_UART1)
-// 0x209100c0 (CFG-MSGOUT-NMEA_ID_GSA_UART1)
-// 0x209100c5 (CFG-MSGOUT-NMEA_ID_GSV_UART1)
-// 0x209100b1 (CFG-MSGOUT-NMEA_ID_VTG_UART1)
-// 0x20920007 (CFG-INFMSG-NMEA_UART1)
-// 0x209100bb (CFG-MSGOUT-NMEA_ID_GGA_UART1)
-// 0x209100ac (CFG-MSGOUT-NMEA_ID_RMC_UART1)
 uint8_t setNMEAon() {
-  i2cGNSS.newCfgValset8(0x209100ca, 0x00, VAL_LAYER_RAM);
-  i2cGNSS.addCfgValset8(0x209100c0, 0x00);
-  i2cGNSS.addCfgValset8(0x209100c5, 0x00);
-  i2cGNSS.addCfgValset8(0x209100b1, 0x00);
-  i2cGNSS.addCfgValset8(0x20920007, 0x00);
-  i2cGNSS.addCfgValset8(0x209100bb, 0x01);
-  return i2cGNSS.sendCfgValset8(0x209100ac, 0x01);
+  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GLL_UART1, 0x00, VAL_LAYER_RAM);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSA_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSV_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_VTG_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_INFMSG_NMEA_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GGA_UART1, 0x01);
+  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_RMC_UART1, 0x01);
 }
 
 // Disable the NMEA messages
-// UBX-CFG-VALSET message with key IDs of:
-// 0x209100ca (CFG-MSGOUT-NMEA_ID_GLL_UART1)
-// 0x209100c0 (CFG-MSGOUT-NMEA_ID_GSA_UART1)
-// 0x209100c5 (CFG-MSGOUT-NMEA_ID_GSV_UART1)
-// 0x209100b1 (CFG-MSGOUT-NMEA_ID_VTG_UART1)
-// 0x20920007 (CFG-INFMSG-NMEA_UART1)
-// 0x209100bb (CFG-MSGOUT-NMEA_ID_GGA_UART1)
-// 0x209100ac (CFG-MSGOUT-NMEA_ID_RMC_UART1)
 uint8_t setNMEAoff() {
-  i2cGNSS.newCfgValset8(0x209100ca, 0x00, VAL_LAYER_RAM);
-  i2cGNSS.addCfgValset8(0x209100c0, 0x00);
-  i2cGNSS.addCfgValset8(0x209100c5, 0x00);
-  i2cGNSS.addCfgValset8(0x209100b1, 0x00);
-  i2cGNSS.addCfgValset8(0x20920007, 0x00);
-  i2cGNSS.addCfgValset8(0x209100bb, 0x00);
-  return i2cGNSS.sendCfgValset8(0x209100ac, 0x00);
+  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GLL_UART1, 0x00, VAL_LAYER_RAM);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSA_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSV_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_VTG_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_INFMSG_NMEA_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GGA_UART1, 0x00);
+  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_RMC_UART1, 0x00);
 }
 
-// Set the Main NMEA Talker ID to "GP"
-// UBX-CFG-VALSET message with a key ID of 0x20930031 (CFG-NMEA-MAINTALKERID) and a value of 1 (GP):
+// Set the Main NMEA Talker ID to "GP" (with a value of 1)
 uint8_t setTALKERID() {
-  return i2cGNSS.setVal8(0x20930031, 0x01, VAL_LAYER_RAM);
+  return i2cGNSS.setVal8(UBLOX_CFG_NMEA_MAINTALKERID, 0x01, VAL_LAYER_RAM);
 }
 
 // Set the measurement rate
-// UBX-CFG-VALSET message with a key ID of 0x30210001 (CFG-RATE-MEAS)
-uint8_t setRATE_20Hz() { return i2cGNSS.setVal16(0x30210001, 0x0032, VAL_LAYER_RAM); }
-uint8_t setRATE_10Hz() { return i2cGNSS.setVal16(0x30210001, 0x0064, VAL_LAYER_RAM); }
-uint8_t setRATE_5Hz() { return i2cGNSS.setVal16(0x30210001, 0x00c8, VAL_LAYER_RAM); }
-uint8_t setRATE_4Hz() { return i2cGNSS.setVal16(0x30210001, 0x00fa, VAL_LAYER_RAM); }
-uint8_t setRATE_2Hz() { return i2cGNSS.setVal16(0x30210001, 0x01f4, VAL_LAYER_RAM); }
-uint8_t setRATE_1Hz() { return i2cGNSS.setVal16(0x30210001, 0x03e8, VAL_LAYER_RAM); }
+uint8_t setRATE_20Hz() { return i2cGNSS.setVal16(UBLOX_CFG_RATE_MEAS, 0x0032, VAL_LAYER_RAM); }
+uint8_t setRATE_10Hz() { return i2cGNSS.setVal16(UBLOX_CFG_RATE_MEAS, 0x0064, VAL_LAYER_RAM); }
+uint8_t setRATE_5Hz() { return i2cGNSS.setVal16(UBLOX_CFG_RATE_MEAS, 0x00c8, VAL_LAYER_RAM); }
+uint8_t setRATE_4Hz() { return i2cGNSS.setVal16(UBLOX_CFG_RATE_MEAS, 0x00fa, VAL_LAYER_RAM); }
+uint8_t setRATE_2Hz() { return i2cGNSS.setVal16(UBLOX_CFG_RATE_MEAS, 0x01f4, VAL_LAYER_RAM); }
+uint8_t setRATE_1Hz() { return i2cGNSS.setVal16(UBLOX_CFG_RATE_MEAS, 0x03e8, VAL_LAYER_RAM); }
 
 // Set the navigation dynamic model
-// UBX-CFG-VALSET message with a key ID of 0x20110021 (CFG-NAVSPG-DYNMODEL)
-uint8_t setNAVportable() { return i2cGNSS.setVal8(0x20110021, 0x00, VAL_LAYER_RAM); };
-uint8_t setNAVstationary() { return i2cGNSS.setVal8(0x20110021, 0x02, VAL_LAYER_RAM); };
-uint8_t setNAVpedestrian() { return i2cGNSS.setVal8(0x20110021, 0x03, VAL_LAYER_RAM); };
-uint8_t setNAVautomotive() { return i2cGNSS.setVal8(0x20110021, 0x04, VAL_LAYER_RAM); };
-uint8_t setNAVsea() { return i2cGNSS.setVal8(0x20110021, 0x05, VAL_LAYER_RAM); };
-uint8_t setNAVair1g() { return i2cGNSS.setVal8(0x20110021, 0x06, VAL_LAYER_RAM); };
-uint8_t setNAVair2g() { return i2cGNSS.setVal8(0x20110021, 0x07, VAL_LAYER_RAM); };
-uint8_t setNAVair4g() { return i2cGNSS.setVal8(0x20110021, 0x08, VAL_LAYER_RAM); };
-uint8_t setNAVwrist() { return i2cGNSS.setVal8(0x20110021, 0x09, VAL_LAYER_RAM); };
+uint8_t setNAVportable() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x00, VAL_LAYER_RAM); };
+uint8_t setNAVstationary() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x02, VAL_LAYER_RAM); };
+uint8_t setNAVpedestrian() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x03, VAL_LAYER_RAM); };
+uint8_t setNAVautomotive() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x04, VAL_LAYER_RAM); };
+uint8_t setNAVsea() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x05, VAL_LAYER_RAM); };
+uint8_t setNAVair1g() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x06, VAL_LAYER_RAM); };
+uint8_t setNAVair2g() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x07, VAL_LAYER_RAM); };
+uint8_t setNAVair4g() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x08, VAL_LAYER_RAM); };
+uint8_t setNAVwrist() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x09, VAL_LAYER_RAM); };
 
 // Set UART2 to 230400 Baud
-// UBX-CFG-VALSET message with a key ID of 0x40530001 (CFG-UART2-BAUDRATE) and a value of 0x00038400 (230400 decimal)
 uint8_t setUART2BAUD_230400() {
-  return i2cGNSS.setVal32(0x40530001, 0x00038400, VAL_LAYER_RAM);
+  return i2cGNSS.setVal32(UBLOX_CFG_UART2_BAUDRATE, 0x00038400, VAL_LAYER_RAM);
 }
 
 // Set UART2 to 115200 Baud
-// UBX-CFG-VALSET message with a key ID of 0x40530001 (CFG-UART2-BAUDRATE) and a value of 0x0001c200 (115200 decimal)
 uint8_t setUART2BAUD_115200() {
-  return i2cGNSS.setVal32(0x40530001, 0x0001c200, VAL_LAYER_RAM);
+  return i2cGNSS.setVal32(UBLOX_CFG_UART2_BAUDRATE, 0x0001c200, VAL_LAYER_RAM);
 }
 
 // Set Survey_In mode
-// UBX-CFG-VALSET message with a key IDs and values of:
-// 0x20030001 (CFG-TMODE-MODE) and a value of 1
-// 0x40030011 (CFG-TMODE-SVIN_ACC_LIMIT) and a value of 0x0000c350 (50000 decimal = 5 m)
-// 0x40030010 (CFG-TMODE-SVIN_MIN_DUR) and a value of 0x0000003c (60 decimal = 1 min)
 uint8_t setSurveyIn() {
-  i2cGNSS.newCfgValset8(0x20030001, 0x01, VAL_LAYER_RAM);
-  i2cGNSS.addCfgValset32(0x40030011, 0x0000c350);
-  return i2cGNSS.sendCfgValset32(0x40030010, 0x0000003c);
+  i2cGNSS.newCfgValset8(UBLOX_CFG_TMODE_MODE, 0x01, VAL_LAYER_RAM);
+  i2cGNSS.addCfgValset32(UBLOX_CFG_TMODE_SVIN_ACC_LIMIT, 0x0000c350); // (50000 decimal = 5 m)
+  return i2cGNSS.sendCfgValset32(UBLOX_CFG_TMODE_SVIN_MIN_DUR, 0x0000003c); // (60 decimal = 1 min)
 }
 
 // Disable Survey_In mode
-// UBX-CFG-VALSET message with a key ID of 0x20030001 (CFG-TMODE-MODE) and a value of 0
 uint8_t disableSurveyIn() {
-  return i2cGNSS.setVal8(0x20030001, 0x00, VAL_LAYER_RAM);
+  return i2cGNSS.setVal8(UBLOX_CFG_TMODE_MODE, 0x00, VAL_LAYER_RAM);
 }
 
 // Enable RTCM message output on UART2
 // UBX-CFG-VALSET message with the following key IDs
 // Set the value byte to 0x01 to send an RTCM message at RATE_MEAS; set the value to 0x04 to send an RTCM message at 1/4 RATE_MEAS
 // (i.e. assumes you will be logging RAWX data at 4 Hz. Adjust accordingly)
-// 0x209102bf (CFG-MSGOUT-RTCM_3X_TYPE1005_UART2)
-// 0x209102ce (CFG-MSGOUT-RTCM_3X_TYPE1077_UART2)
-// 0x209102d3 (CFG-MSGOUT-RTCM_3X_TYPE1087_UART2)
-// 0x209102d8 (CFG-MSGOUT-RTCM_3X_TYPE1127_UART2)
-// 0x2091031a (CFG-MSGOUT-RTCM_3X_TYPE1097_UART2)
-// 0x20910305 (CFG-MSGOUT-RTCM_3X_TYPE1230_UART2)
 uint8_t setRTCMon() {
-  i2cGNSS.newCfgValset8(0x209102bf, 0x04, VAL_LAYER_RAM);
-  i2cGNSS.addCfgValset8(0x209102ce, 0x04);
-  i2cGNSS.addCfgValset8(0x209102d3, 0x04);
-  i2cGNSS.addCfgValset8(0x209102d8, 0x04);
-  i2cGNSS.addCfgValset8(0x2091031a, 0x04);
-  return i2cGNSS.sendCfgValset8(0x20910305, 0x28);
+  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1005_UART2, 0x04, VAL_LAYER_RAM);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1077_UART2, 0x04);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1087_UART2, 0x04);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1127_UART2, 0x04);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1097_UART2, 0x04);
+  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1230_UART2, 0x28);
 }
 
 // Disable RTCM message output on UART2
-// UBX-CFG-VALSET message with the following key IDs and values of 0:
-// 0x209102bf (CFG-MSGOUT-RTCM_3X_TYPE1005_UART2)
-// 0x209102ce (CFG-MSGOUT-RTCM_3X_TYPE1077_UART2)
-// 0x209102d3 (CFG-MSGOUT-RTCM_3X_TYPE1087_UART2)
-// 0x209102d8 (CFG-MSGOUT-RTCM_3X_TYPE1127_UART2)
-// 0x2091031a (CFG-MSGOUT-RTCM_3X_TYPE1097_UART2)
-// 0x20910305 (CFG-MSGOUT-RTCM_3X_TYPE1230_UART2)
+// Set the rate to 0x00
 uint8_t setRTCMoff() {
-  i2cGNSS.newCfgValset8(0x209102bf, 0x00, VAL_LAYER_RAM);
-  i2cGNSS.addCfgValset8(0x209102ce, 0x00);
-  i2cGNSS.addCfgValset8(0x209102d3, 0x00);
-  i2cGNSS.addCfgValset8(0x209102d8, 0x00);
-  i2cGNSS.addCfgValset8(0x2091031a, 0x00);
-  return i2cGNSS.sendCfgValset8(0x20910305, 0x00);
+  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1005_UART2, 0x00, VAL_LAYER_RAM);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1077_UART2, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1087_UART2, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1127_UART2, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1097_UART2, 0x00);
+  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1230_UART2, 0x00);
 }
 
 // Set TimeGrid for TP1 to GPS (instead of UTC) so TIM_TM2 messages are aligned with GPS time
-// UBX-CFG-VALSET message with the key ID 0x2005000c (CFG-TP-TIMEGRID_TP1) and value of 1 (GPS):
 uint8_t setTimeGrid() {
-  return i2cGNSS.setVal8(0x2005000c, 0x01, VAL_LAYER_RAM);
+  return i2cGNSS.setVal8(UBLOX_CFG_TP_TIMEGRID_TP1, 0x01, VAL_LAYER_RAM);
 }
 
 // Enable NMEA messages on UART2 for BlueTooth transmission (to smartphone for instance)
-// UBX-CFG-VALSET message with key ID of 0x10760002 (CFG-UART2OUTPROT-NMEA) and value of 1:
 uint8_t setUART2nmea() {
-  return i2cGNSS.setVal8(0x10760002, 0x01, VAL_LAYER_RAM);
+  return i2cGNSS.setVal8(UBLOX_CFG_UART2OUTPROT_NMEA, 0x01, VAL_LAYER_RAM);
 }
 
 // Enable NMEA GST sentence on UART2, to give position data to smartphone
-// UBX-CFG-VALSET message with key ID of 0x209100d5 (CFG-MSGOUT-NMEA_ID_GST_UART2) and value of 1:
 uint8_t setUART2nmea_gst() {
-  return i2cGNSS.setVal8(0x209100d5, 0x01, VAL_LAYER_RAM);
+  return i2cGNSS.setVal8(UBLOX_CFG_MSGOUT_NMEA_ID_GST_UART2, 0x01, VAL_LAYER_RAM);
 }
 
 // ExtInt interrupt service routine
