@@ -6,7 +6,7 @@ and, ever a [SparkFun GPS-RTK2 Board](https://www.sparkfun.com/products/15136) w
 dual band (L1 + L2) GNSS receiver or a [SparkFun GPS-RTK Dead Reckoning Breakout](https://www.sparkfun.com/products/16344) which incorporates the [u-blox ZED-F9R](https://www.u-blox.com/en/product/zed-f9r-module)
 dual band (L1 + L2) GNSS receiver with integrated IMU.
 
-![RAWX_Logger](img/RAWX_Logger.JPG)
+![RAWX_Logger](img/gnss_logger_board.jpg)
 
 ![Connections](img/Connections.JPG)
 
