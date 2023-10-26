@@ -1,4 +1,4 @@
-// RAWX_Logger_F9x_I2C
+// RAWX_Logger_F9x
 
 // Logging data from u-blox ZED_F9x modules to SD card
 // F9P can be configured as base or rover (dynamic model=Portable)
