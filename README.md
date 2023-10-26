@@ -1,9 +1,10 @@
-# F9P_RAWX_Logger
+# F9x_RAWX_Logger
 
 
 A guide on how to assemble a GNSS PPK RAWX Logger from an [Adafruit Feather M0 Adalogger](https://www.adafruit.com/product/2796)
-and a [SparkFun GPS-RTK2 Board](https://www.sparkfun.com/products/15136) which incorporates the [u-blox ZED-F9P](https://www.u-blox.com/en/product/zed-f9p-module)
-dual band (L1 + L2) GNSS receiver
+and, ever a [SparkFun GPS-RTK2 Board](https://www.sparkfun.com/products/15136) which incorporates the [u-blox ZED-F9P](https://www.u-blox.com/en/product/zed-f9p-module)
+dual band (L1 + L2) GNSS receiver or a [SparkFun GPS-RTK Dead Reckoning Breakout](https://www.sparkfun.com/products/16344) which incorporates the [u-blox ZED-F9R](https://www.u-blox.com/en/product/zed-f9r-module)
+dual band (L1 + L2) GNSS receiver with integrated IMU.
 
 ![RAWX_Logger](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/RAWX_Logger.JPG)
 
