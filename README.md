@@ -6,23 +6,23 @@ and, ever a [SparkFun GPS-RTK2 Board](https://www.sparkfun.com/products/15136) w
 dual band (L1 + L2) GNSS receiver or a [SparkFun GPS-RTK Dead Reckoning Breakout](https://www.sparkfun.com/products/16344) which incorporates the [u-blox ZED-F9R](https://www.u-blox.com/en/product/zed-f9r-module)
 dual band (L1 + L2) GNSS receiver with integrated IMU.
 
-![RAWX_Logger](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/RAWX_Logger.JPG)
+![RAWX_Logger](img/RAWX_Logger.JPG)
 
-![Connections](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/Connections.JPG)
+![Connections](img/Connections.JPG)
 
 The RAWX files logged by this project can be processed using [rtklibexplorer's](https://rtklibexplorer.wordpress.com/)
 version of [RTKLIB](http://rtkexplorer.com/downloads/rtklib-code/)
 
-[SOFTWARE.md](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/SOFTWARE.md) describes how to install the Arduino IDE and
+[SOFTWARE.md](SOFTWARE.md) describes how to install the Arduino IDE and
 all the libraries you will need for this project
 
-[HARDWARE.md](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/HARDWARE.md) describes how to connect the Adalogger to the
-SparkFun GPS-RTK2 board
+[HARDWARE.md](HARDWARE.md) describes how to connect the Adalogger to the
+SparkFun boards
 
-[UBX.md](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/UBX.md) describes how the Arduino code communicates with
+[UBX.md](UBX.md) describes how the Arduino code communicates with
 the F9P using the u-blox UBX binary protocol to enable and log the RAWX messages
 
-The [Arduino](https://github.com/PaulZC/F9P_RAWX_Logger/tree/master/Arduino) directory contains the Arduino code.
+The [Arduino](Arduino) directory contains the Arduino code.
 
 ## Licence
 
