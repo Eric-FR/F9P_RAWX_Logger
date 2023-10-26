@@ -1,11 +1,26 @@
-// RAWX_Logger_F9P_I2C
+// RAWX_Logger_F9x_I2C
 
-// Logs RXM-RAWX, RXM-SFRBX and TIM-TM2 data from u-blox ZED_F9P GNSS and ZED_F9R HPS GNSS to SD card
-// Also logs NAV-PVT messages (which provide the carrSoln status) and NAV-STATUS messages (which indicate a time fix for Survey_In mode)
-// Also logs NAV-ATT messages (outputs the attitude solution as roll, pitch and heading angles)
-// Also logs high precision NMEA GNGGA position solution messages which can be extracted by RTKLIB
+// Logging data from u-blox ZED_F9x modules to SD card
+// F9P can be configured as base or rover (dynamic model=Portable)
+// F9R is configured as rover, standard (dynamic model=Portable) or for car (dynamic model=Automotive)
+// When F9R is in automotive, e-scooter or "Robotic lawn mower" mode, it try to use the IMU with sensors fusion for dead reckoning (DR)
+// F9T (timing) is not supported now (also not by SparkFun u-blox GNSS Arduino Library v3?)
+// F9K (Dead Reckoning without RTK) is not supported now
+// F9H (heading) is not supported now (also not by SparkFun u-blox GNSS Arduino Library v3?)
+// Default acquisition rate is 1 Hz
+// Priority navigation mode (F9R with ESF/IMU) is x4
 
-// This version uses the SparkFun u-blox library by Nate Seidle to configure the RAWX messages via I2C, leaving the UART dedicated for the messages to be logged to SD card
+// Messages logged are:
+// RXM: RAWX (raw measurements) and SFRBX (satellites informations, not mandatory)
+// TIM: TM2 (Time mark data)
+// NAV: POSLLH, PVT, SAT; (STATUS for F9P in base mode: indicate a time fix for Survey_In mode) (ATT (attitude of the vehicle) and RELPOSNED (Relative positioning vs. reference station) for F9R in automotive mode)
+// ESF (F9R): RAW. STATUS and ALG (with autoalign activated)
+// NMEA (high precision mode): GGA, GSA, GST, GSV and RMC; (THS True Heading ans Status for F9R in Automotive mode) (no NMEA for F9P in base mode)
+
+// Messages are also sent on UART2, for connection with a smartphone for exemple
+// NMEA (high precision mode): GGA, GGL, GSA, GST, GSV and RMC; (THS True Heading and Status for F9R in Automotive mode) (no NMEA for F9P in base mode)
+
+// This version uses the SparkFun u-blox library V3 by Nate Seidle to configure the F9P/F9R via I2C, leaving the UART dedicated for the messages to be logged to SD card
 // Feel like supporting open source hardware? Buy a board from SparkFun!
 // ZED-F9P RTK2: https://www.sparkfun.com/products/15136
 // ZED-F9R Dead Reckoning: https://www.sparkfun.com/products/16344
@@ -18,8 +33,63 @@
 // Choose a good quality SD card. Some cheap cards can't handle the write rate.
 // Ensure the card is formatted as FAT32.
 
-// Choose between F9P and F9R
-//#define F9R // Comment this line out to use F9R instead of F9P
+// Choose between F9x modules
+// #define F9P // Comment this line out to use F9P 
+#define F9R // Comment this line out to use F9R 
+// #define F9T // Comment this line out to use F9T
+// #define F9K // Comment this line out to use F9K
+// #define F9H // Comment this line out to use F9H
+
+#ifdef F9P
+//  #define SFE_UBLOX_DISABLE_ESF
+//  #define SFE_UBLOX_DISABLE_HNR
+
+  #define ROVER_PORTABLE
+//  #define ROVER_STATIONARY
+//  #define ROVER_PEDESTRIAN
+//  #define ROVER_AUTOMOTIVE
+//  #define ROVER_SEA
+//  #define ROVER_airborne_1g
+//  #define ROVER_airborne_2g
+//  #define ROVER_airborne_4g
+//  #define ROVER_watch 
+//  #define ROVER_motorbike // (not available in all products)
+//  #define ROVER_RLM // robotic lawn mower
+//  #define ROVER_E_SCOOTER  
+#endif
+
+#ifdef F9R
+//  #define SFE_UBLOX_DISABLE_RTCM_LOGGING
+
+// choose rover model when activating HPS (high precision sensor fusion between GNSS & IMU -& Wheel tick-)
+#define ROVER_HPS_AUTOMOTIVE
+//  #define ROVER_HPS_RLM // robotic lawn mower
+//  #define ROVER_HPS_E_SCOOTER  
+
+// choose rover model when HPS is not activated
+  #define ROVER_PORTABLE
+//  #define ROVER_STATIONARY
+//  #define ROVER_PEDESTRIAN
+//  #define ROVER_AUTOMOTIVE
+//  #define ROVER_SEA
+//  #define ROVER_airborne_1g
+//  #define ROVER_airborne_2g
+//  #define ROVER_airborne_4g
+//  #define ROVER_watch 
+//  #define ROVER_motorbike // (not available in all products)
+//  #define ROVER_RLM // robotic lawn mower
+//  #define ROVER_E_SCOOTER  
+
+#ifdef ROVER_HPS_AUTOMOTIVE
+  #define UseAutoAlign // Comment this line out to disable IMU autoalignment
+#endif  
+
+#endif
+
+// in case of use of mulitple bases like in long trip, one way activate the NAV-RELPOSNED
+#define MULTI_BASE // Comment this line out to disable NAV-RELPOSNED
+
+
 
 // Changes to a new log file every INTERVAL minutes
 
@@ -33,13 +103,14 @@ const int INTERVAL = 15;
 const int dwell = 300;
 
 // Send serial debug messages
-//#define DEBUG // Comment this line out to disable debug messages
+#define DEBUG // Comment this line out to disable debug messages
 
 // Debug SerialBuffer
 // Displays a "Max bufAvail:" message each time SerialBuffer.available reaches a new maximum
-//#define DEBUGserialBuffer // Comment this to disable serial buffer maximum available debugging
+#define DEBUGserialBuffer // Comment this to disable serial buffer maximum available debugging
 
-// Connect modePin to GND to select base mode. Leave open for rover mode.
+// F9P: Connect modePin to GND to select base mode. Leave open for rover mode.
+// F9R: Connect modePin to GND to select non-HPS operation (IMU data still logged). Leave open for HPS operation (Fusion Engine with GNSS and IMU)
 #define modePin 14 // A0 / Digital Pin 14
 
 // Connect a normally-open push-to-close switch between swPin and GND.
@@ -51,12 +122,13 @@ const int dwell = 300;
 #define ExtIntPin 16 // A2 / Digital Pin 16
 #define white_flash 1000 // Flash the NeoPxel white for this many milliseconds on every ExtInt
 
-// Connect A3 (Digital Pin 17) to GND to select SURVEY_IN mode when in BASE mode
+// F9P : Connect A3 (Digital Pin 17) to GND to select SURVEY_IN mode when in BASE mode
+// F9R : Connect A3 (Digital Pin 17) to GND to force Cold Start and Auto-Alignement(if available). Leave open to try Hot Start and recover previous alignment.
 #define SurveyInPin 17 // A3 / Digital Pin 17
 
-// Include the SparkFun u-blox GNSS Library (replacing SparkFun u-blox Library)
-#include <Wire.h> //Needed for I2C to GNSS
-#include "SparkFun_u-blox_GNSS_Arduino_Library.h" //http://librarymanager/All#SparkFun_u-blox_GNSS_Arduino_Library
+// Include the SparkFun_u-blox_GNSS_v3
+#include <Wire.h> //Needed for I2C to GPS
+#include "SparkFun_u-blox_GNSS_v3.h" //https://github.com/sparkfun/SparkFun_u-blox_GNSS_v3
 SFE_UBLOX_GNSS i2cGNSS;
 
 // LEDs
@@ -96,13 +168,93 @@ const uint8_t cardSelect = 4; // Adalogger uses D4 as the SD SPI select
 SdFat sd;
 SdFile rawx_dataFile;
 // The log filename starts with "r_" for the rover and "b_" for the static base
-bool base_mode = true; // Flag to indicate if the code is in base or rover mode
 char rawx_filename[] = "20000000/b_000000.ubx"; // the b will be replaced by an r if required
 char dirname[] = "20000000";
 long bytes_written = 0;
 
-#ifndef F9R
+#ifdef F9R
+File align_dataFile;
+char align_filename[] = "align.txt"; // store alignment angles
+
+bool read_align_file(){
+String MyLine;
+float MyFloat;
+
+  align_dataFile = sd.open(align_filename);
+  if (align_dataFile) {
+    Serial.println("reading align file:");
+
+    if (align_dataFile.available())
+    {
+      if (align_dataFile.readStringUntil('\r')=="fine")
+      {
+        if (align_dataFile.available())
+        {
+          MyLine = align_dataFile.readStringUntil('\r');
+          MyFloat = MyLine.toFloat();
+          i2cGNSS.setVal16(UBLOX_CFG_SFIMU_IMU_MNTALG_ROLL, int16_t(100*MyFloat) , VAL_LAYER_RAM);
+          if (align_dataFile.available())
+          {
+            MyLine = align_dataFile.readStringUntil('\r');
+            MyFloat = MyLine.toFloat();
+            i2cGNSS.setVal16(UBLOX_CFG_SFIMU_IMU_MNTALG_PITCH, int16_t(100*MyFloat) , VAL_LAYER_RAM);
+            if (align_dataFile.available())
+            {
+              MyLine = align_dataFile.readStringUntil('\r');
+              MyFloat = MyLine.toFloat();
+              i2cGNSS.setVal32(UBLOX_CFG_SFIMU_IMU_MNTALG_YAW, int32_t(100*MyFloat) , VAL_LAYER_RAM);
+              Serial.println("Success");
+              return true;
+            }
+            else
+            {
+              Serial.println("no yaw found");
+              return false;
+            }
+          }
+          else
+          {
+            Serial.println("no pitch found");
+            return false;
+          }
+        }
+        else
+        {
+          Serial.println("no roll found");
+          return false;
+        }
+        
+      }
+      else
+      {
+        Serial.println("no fine alignment in stored file");
+        return false;
+      }  
+    }
+    else
+    {
+      return false;
+    }
+    // close the file:
+    align_dataFile.close();
+  }
+  else
+  {
+    // if the file didn't open, print an error:
+    Serial.println("error opening align.txt");
+    return false;
+  }
+}
+
+
+#endif
+
+#ifdef F9P
 bool survey_in_mode = false; // Flag to indicate if the code is in survey_in mode
+bool base_mode = true; // Flag to indicate if the code is in base or rover mode
+#endif
+#ifdef F9R
+bool HPS_mode = false; // Flag to indicate if F9R use HPS or not
 #endif
 
 // Timer to indicate if an ExtInt has been received
@@ -116,7 +268,7 @@ int numBytes;
 
 // Battery voltage
 float vbat;
-#define LOWBAT 3.55 // Low battery voltage
+#define LOWBAT 3.55 // Low battery voltage cut off
 
 // Include Real Time Clock support for the M0
 // https://github.com/arduino-libraries/RTCZero
@@ -147,6 +299,10 @@ RingBufferN<16384> SerialBuffer; // Define SerialBuffer as a RingBuffer of size 
 #define restart_file  6
 int loop_step = init;
 
+#ifdef UseAutoAlign
+uint8_t align_state = 0;
+#endif
+
 // UBX and NMEA Parse State
 #define looking_for_B5_dollar   0
 #define looking_for_62          1
@@ -171,6 +327,7 @@ int ubx_checksum_A = 0;
 int ubx_checksum_B = 0;
 int ubx_expected_checksum_A = 0;
 int ubx_expected_checksum_B = 0;
+int num_sens = 0;  // to parse multisensors ubx sentences
 int nmea_char_1 = '0'; // e.g. G
 int nmea_char_2 = '0'; // e.g. P
 int nmea_char_3 = '0'; // e.g. G
@@ -181,80 +338,109 @@ int nmea_csum1 = '0';
 int nmea_csum2 = '0';
 int nmea_expected_csum1 = '0';
 int nmea_expected_csum2 = '0';
-#define max_nmea_len 100 // Maximum length for an NMEA message: use this to detect if we have lost sync while receiving an NMEA message
+#define max_nmea_len 150 // Maximum length for an NMEA message: use this to detect if we have lost sync while receiving an NMEA message
+// standard NMEA must not exced 82 chars but it is overloaded due to high precision NMEA activation
 
-// Definitions for u-blox F9P UBX-format (binary) messages
+// Definitions for u-blox UBX-format (binary) messages
+
+// setUBXoff: this is the message which disables all of the UBX messages being logged to SD card
+// It also clears the NMEA high precision mode for the GPGGA message
+// It also sets the main talker ID to 'GP'
+uint8_t setUBXoff() {
+  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_UBX_RXM_RAWX_UART1, 0x00, VAL_LAYER_RAM);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_RXM_SFRBX_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_POSLLH_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_PVT_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_SAT_UART1, 0x00);
+#ifdef F9P  
+  if (survey_in_mode )
+  {
+    i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_STATUS_UART1, 0x00);
+  }  
+#endif  
+#ifdef MULTI_BASE   
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_RELPOSNED_UART1, 0x00);
+#endif  
+#ifdef F9R  
+  if (HPS_mode) {
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_ATT_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_ESF_STATUS_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_ESF_ALG_UART1, 0x00);
+  }
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_ESF_RAW_UART1, 0x00);
+#endif  
+  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_UBX_TIM_TM2_UART1, 0x00);
+}
+
+// setUBXon: this is the message which enables all of the UBX messages to be logged to SD card (through UART1) in one go
+// for each line, change the last byte from 0x01 to 0x00 to leave the corresponding message disabled
+uint8_t setUBXon() {
+  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_UBX_RXM_RAWX_UART1, 0x01, VAL_LAYER_RAM);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_RXM_SFRBX_UART1, 0x01);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_POSLLH_UART1, 0x01);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_PVT_UART1, 0x01);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_SAT_UART1, 0x01);
+#ifdef F9P  
+  if (survey_in_mode) {
+    i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_STATUS_UART1, 0x01);
+  }  
+#endif
+#ifdef MULTI_BASE   
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_RELPOSNED_UART1, 0x01);
+#endif  
+#ifdef F9R  
+  if (HPS_mode) {
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_ATT_UART1, 0x01);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_ESF_STATUS_UART1, 0x01);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_ESF_ALG_UART1, 0x01);
+  }
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_ESF_RAW_UART1, 0x01);
+#endif  
+  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_UBX_TIM_TM2_UART1, 0x01);
+}
+
+// Definitions for NMEA messages
 
 // Disable NMEA output on the I2C port
 uint8_t disableI2cNMEA() {
   return i2cGNSS.setVal8(UBLOX_CFG_I2COUTPROT_NMEA, 0x00, VAL_LAYER_RAM);
 }
 
-// Set UART1 to 230400 Baud (0x00038400)
-uint8_t setUART1BAUD() {
-  return i2cGNSS.setVal32(UBLOX_CFG_UART1_BAUDRATE, 0x00038400, VAL_LAYER_RAM);
-}
-// setRAWXoff: this is the message which disables all of the messages being logged to SD card
-// It also clears the NMEA high precision mode for the GPGGA message
-// It also sets the main talker ID to 'GP'
-uint8_t setRAWXoff() {
-  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_UBX_RXM_RAWX_UART1, 0x00, VAL_LAYER_RAM);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_RXM_SFRBX_UART1, 0x00);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_TIM_TM2_UART1, 0x00);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_POSLLH_UART1, 0x00);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_PVT_UART1, 0x00);
-#ifdef F9R  
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_ATT_UART1, 0x00);
-#endif  
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_STATUS_UART1, 0x00);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_NMEA_MAINTALKERID, 0x01);    // This line sets the main talker ID to GP
-  i2cGNSS.addCfgValset8(UBLOX_CFG_NMEA_HIGHPREC, 0x00);    // This line disables NMEA high precision mode
-  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GGA_UART1, 0x00);  // This line disables the GGA message
-}
-
-// setRAWXon: this is the message which enables all of the messages to be logged to SD card in one go
-// It also sets the NMEA high precision mode for the GNGGA message
-// It also sets the main talker ID to 'GN'
-uint8_t setRAWXon() {
-  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_UBX_RXM_RAWX_UART1, VAL_LAYER_RAM);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_RXM_SFRBX_UART1, 0x01);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_TIM_TM2_UART1, 0x01);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_POSLLH_UART1, 0x01);   // Change the last byte from 0x01 to 0x00 to leave NAV_POSLLH disabled
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_PVT_UART1, 0x01);   // Change the last byte from 0x01 to 0x00 to leave NAV_PVT disabled
-#ifdef F9R  
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_ATT_UART1, 0x01);   // Change the last byte from 0x01 to 0x00 to leave NAV_ATT disabled
-#endif  
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_UBX_NAV_STATUS_UART1, 0x01);   // This line enables the NAV_STATUS message
-  i2cGNSS.addCfgValset8(UBLOX_CFG_NMEA_MAINTALKERID, 0x03);   // This line sets the main talker ID to GN
-  i2cGNSS.addCfgValset8(UBLOX_CFG_NMEA_HIGHPREC, 0x01);   // This sets the NMEA high precision mode
-  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GGA_UART1, 0x01); // This (re)enables the GGA mesage
-}
-
-// Enable the NMEA GGA and RMC messages on UART1
+// setNMEAon: this is the message which enables all of the NMEA messages to be logged to SD card (through UART1) in one go
+// for each line, change the last byte from 0x01 to 0x00 to leave the corresponding message disabled
 uint8_t setNMEAon() {
-  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GLL_UART1, 0x00, VAL_LAYER_RAM);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSA_UART1, 0x00);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSV_UART1, 0x00);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_VTG_UART1, 0x00);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_INFMSG_NMEA_UART1, 0x00);
+  i2cGNSS.newCfgValset8(UBLOX_CFG_NMEA_MAINTALKERID, 0x03, VAL_LAYER_RAM);   // This line sets the main talker ID to GN
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GGA_UART1, 0x01);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSA_UART1, 0x01);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GST_UART1, 0x01);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSV_UART1, 0x01);
+  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GLL_UART1, 0x01);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_VTG_UART1, 0x01);
+#ifdef F9R  
+  if (HPS_mode) {
+    i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_THS_UART1, 0x01);
+  }  
+#endif
+  i2cGNSS.addCfgValset8(UBLOX_CFG_INFMSG_NMEA_UART1, 0x00);
   return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_RMC_UART1, 0x01);
 }
 
-// Disable the NMEA messages
+// Disable the NMEA messages on UART1
 uint8_t setNMEAoff() {
-  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GLL_UART1, 0x00, VAL_LAYER_RAM);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSA_UART1, 0x00);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSV_UART1, 0x00);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_VTG_UART1, 0x00);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_INFMSG_NMEA_UART1, 0x00);
+  i2cGNSS.newCfgValset8(UBLOX_CFG_NMEA_MAINTALKERID, 0x01, VAL_LAYER_RAM);    // This line sets the main talker ID to GP
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GGA_UART1, 0x00);
-  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_RMC_UART1, 0x00);
-}
-
-// Set the Main NMEA Talker ID to "GP" (with a value of 1)
-uint8_t setTALKERID() {
-  return i2cGNSS.setVal8(UBLOX_CFG_NMEA_MAINTALKERID, 0x01, VAL_LAYER_RAM);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSA_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GST_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSV_UART1, 0x00);
+  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GLL_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_VTG_UART1, 0x00);
+#ifdef F9R  
+  if (HPS_mode) {
+    i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_THS_UART1, 0x00);
+  }  
+#endif
+  i2cGNSS.addCfgValset8(UBLOX_CFG_INFMSG_NMEA_UART1, 0x00);
+  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_RMC_UART1, 0x00); 
 }
 
 // Set the measurement rate
@@ -275,9 +461,52 @@ uint8_t setNAVair1g() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x06, 
 uint8_t setNAVair2g() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x07, VAL_LAYER_RAM); };
 uint8_t setNAVair4g() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x08, VAL_LAYER_RAM); };
 uint8_t setNAVwrist() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x09, VAL_LAYER_RAM); };
-uint8_t setNAVbike() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x0a, VAL_LAYER_RAM); };
+uint8_t setNAVbike() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x0a, VAL_LAYER_RAM); };  // not available in recent firmware???
 uint8_t setNAVrobotic() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x0b, VAL_LAYER_RAM); };
 uint8_t setNAVescooter() { return i2cGNSS.setVal8(UBLOX_CFG_NAVSPG_DYNMODEL, 0x0c, VAL_LAYER_RAM); };
+
+
+// Set classical navigation dynamic models
+void setClassicalDynamic()
+{
+#ifdef ROVER_PORTABLE
+    setNAVportable(); // Set Portable Navigation Mode
+#endif
+#ifdef ROVER_STATIONARY    
+    setNAVportable(); // Set Stationary Navigation Mode
+#endif
+#ifdef ROVER_PEDESTRIAN
+    setNAVpedestrian(); // Set Pedestrian Navigation Mode
+#endif    
+#ifdef ROVER_AUTOMOTIVE
+    setNAVautomotive(); // Set Automotive Navigation Mode
+#endif    
+#ifdef ROVER_SEA
+    setNAVsea(); // Set Sea Navigation Mode
+#endif    
+#ifdef ROVER_airborne_1g
+    //setNAVair1g(); // Set Airborne <1G Navigation Mode
+#endif    
+#ifdef ROVER_airborne_2g
+    //setNAVair2g(); // Set Airborne <2G Navigation Mode
+#endif    
+#ifdef ROVER_airborne_4g
+    //setNAVair4g(); // Set Airborne <4G Navigation Mode
+#endif    
+#ifdef ROVER_watch 
+    setNAVwrist(); // Set Wrist Navigation Mode
+#endif    
+#ifdef ROVER_motorbike // motorbike (not available in all products)
+  setNAVbike();
+#endif  
+#ifdef ROVER_RLM // robotic lawn mower
+    setNAVrobotic();
+#endif    
+#ifdef ROVER_E_SCOOTER  
+    setNAVescooter();  // electrical scooter
+#endif    
+}
+
 
 // Set UART2 to 230400 Baud
 uint8_t setUART2BAUD_230400() {
@@ -289,12 +518,12 @@ uint8_t setUART2BAUD_115200() {
   return i2cGNSS.setVal32(UBLOX_CFG_UART2_BAUDRATE, 0x0001c200, VAL_LAYER_RAM);
 }
 
-#ifndef F9R
+#ifdef F9P
 // Set Survey_In mode
 uint8_t setSurveyIn() {
   i2cGNSS.newCfgValset8(UBLOX_CFG_TMODE_MODE, 0x01, VAL_LAYER_RAM);
-  i2cGNSS.addCfgValset32(UBLOX_CFG_TMODE_SVIN_ACC_LIMIT, 0x0000c350); // (50000 decimal = 5 m)
-  return i2cGNSS.sendCfgValset32(UBLOX_CFG_TMODE_SVIN_MIN_DUR, 0x0000003c); // (60 decimal = 1 min)
+  i2cGNSS.addCfgValset32(UBLOX_CFG_TMODE_SVIN_ACC_LIMIT, 0x00001388); // (5000 decimal = 0.5 m)
+  return i2cGNSS.sendCfgValset32(UBLOX_CFG_TMODE_SVIN_MIN_DUR, 0x00000258); // (600 decimal = 10 min)
 }
 
 // Disable Survey_In mode
@@ -334,12 +563,11 @@ uint8_t setTimeGrid() {
 
 // Enable NMEA messages on UART2 for BlueTooth transmission (to smartphone for instance)
 uint8_t setUART2nmea() {
-  return i2cGNSS.setVal8(UBLOX_CFG_UART2OUTPROT_NMEA, 0x01, VAL_LAYER_RAM);
-}
-
-// Enable NMEA GST sentence on UART2, to give position data to smartphone
-uint8_t setUART2nmea_gst() {
-  return i2cGNSS.setVal8(UBLOX_CFG_MSGOUT_NMEA_ID_GST_UART2, 0x01, VAL_LAYER_RAM);
+  i2cGNSS.newCfgValset8(UBLOX_CFG_UART2OUTPROT_NMEA, 0x01, VAL_LAYER_RAM); // Enable default messages GGA, GLL, GSA, GSV, RMC, VTG (not clear if enable by default!!!)
+#ifdef F9R
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_THS_UART2, 0x01); // THS: True Heading and Status
+#endif  
+  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GST_UART2, 0x01); // GST: GNSS pseudorange error statistics
 }
 
 // ExtInt interrupt service routine
@@ -534,11 +762,13 @@ void setup()
 #endif
 #endif
 
-  // initialize modePin (A0) as an input for the Base/Rover mode select switch
+  // F9P: initialize modePin (A0) as an input for the Base/Rover mode select switch
+  // F9R: initialize modePin (A0) as an input for HPS use switch
   pinMode(modePin, INPUT_PULLUP);
 
-  // initialize swPin (A1) as an input for the stop switch
-  pinMode(swPin, INPUT_PULLUP);
+  // F9P: initialise SurveyInPin (A3) as an input for the SURVEY_IN switch
+  // F9R: initialise SurveyInPin (A3) as an input for Cold Start/Autoalign (Reset Align) switch
+  pinMode(SurveyInPin, INPUT_PULLUP);
 
   // initialise ExtIntPin (A2) as an input for the EVENT switch
   pinMode(ExtIntPin, INPUT_PULLUP);
@@ -547,21 +777,60 @@ void setup()
   attachInterrupt(ExtIntPin, ExtInt, FALLING);
   ExtIntTimer = millis(); // Initialise the ExtInt LED timer
 
-#ifndef F9R
-  // initialise SurveyInPin (A3) as an input for the SURVEY_IN switch
-  pinMode(SurveyInPin, INPUT_PULLUP);
-#endif
+  // initialize swPin (A1) as an input for the stop switch
+  pinMode(swPin, INPUT_PULLUP);
 
-  delay(10000); // Allow 10 sec for user to open serial monitor (Comment this line if required)
+//  delay(10000); // Allow 10 sec for user to open serial monitor (Comment this line if required)
   //while (!Serial); // OR Wait for user to run python script or open serial monitor (Comment this line as required)
 
   Serial.begin(115200);
+  delay(10000);
 
-#ifdef F9R
-  Serial.println("RAWX Logger F9R");
-#else
+#ifdef F9P
   Serial.println("RAWX Logger F9P");
 #endif
+#ifdef F9R
+  Serial.println("RAWX Logger F9R");
+#endif
+#ifdef F9K
+  Serial.println("RAWX Logger F9K: NOT SUPPORTED.");
+#ifndef NoLED
+#ifdef NeoPixel
+    setLED(red); // Set NeoPixel to red
+#else
+    digitalWrite(RedLED, HIGH); // Turn red LED on
+#endif
+#endif    
+    while (1);
+  }
+#endif
+#ifdef F9H
+  Serial.println("RAWX Logger F9H: NOT SUPPORTED.");
+#ifndef NoLED
+#ifdef NeoPixel
+    setLED(red); // Set NeoPixel to red
+#else
+    digitalWrite(RedLED, HIGH); // Turn red LED on
+#endif
+#endif    
+    while (1);
+  }
+#endif
+#ifdef F9T
+  Serial.println("RAWX Logger F9T: NOT SUPPORTED.");
+#ifndef NoLED
+#ifdef NeoPixel
+    setLED(red); // Set NeoPixel to red
+#else
+    digitalWrite(RedLED, HIGH); // Turn red LED on
+#endif
+#endif    
+    while (1);
+  }
+#endif
+  
+  
+  
   Serial.println("Log GNSS RAWX data to SD card");
 #ifndef NeoPixel
   Serial.println("Green LED = Initial GNSS Fix");
@@ -588,7 +857,8 @@ void setup()
   Wire.begin();
   Wire.setClock(400000); //Increase I2C clock speed to 400kHz
 
-  if (i2cGNSS.begin(Wire,0x42) == false) //Connect to the Ublox module using Wire port
+//  if (i2cGNSS.begin(Wire,0x42) == false) //Connect to the Ublox module using Wire port
+  if (i2cGNSS.begin() == false) //Connect to the Ublox module using Wire port
   {
     Serial.println(F("Panic!! Ublox GNSS not detected at default I2C address. Please check wiring. Freezing!"));
 #ifndef NoLED
@@ -600,6 +870,7 @@ void setup()
 #endif    
     while (1);
   }
+
   Serial.println(F("Ublox GNSS found!"));
 
 #ifdef DEBUG
@@ -612,20 +883,22 @@ void setup()
   // Turn on DEBUG to see if the commands are acknowledged (Received: CLS:5 ID:1 Payload: 6 8A) or not acknowledged (CLS:5 ID:0)
   boolean response = true;
   response &= disableI2cNMEA(); //Disable NMEA messages on the I2C port leaving it clear for UBX messages
-  response &= setUART1BAUD(); // Change the UART1 baud rate to 230400
-  response &= setRAWXoff(); // Disable RAWX messages on UART1. Also disables the NMEA high precision mode
+//  response &= setUART1BAUD(); // Change the UART1 baud rate to 230400
+  response &= i2cGNSS.setSerialRate(0x00038400, COM_PORT_UART1, VAL_LAYER_RAM); // Change the UART1 baud rate to 230400
+  
+  response &= setUBXoff(); // Disable RAWX messages on UART1
   response &= setNMEAoff(); // Disable NMEA messages on UART1
-  response &= setTALKERID(); // Set NMEA TALKERID to GP
+  response &= i2cGNSS.setHighPrecisionMode(true, VAL_LAYER_RAM); // Enable the NMEA high precision mode
   response &= setRATE_1Hz(); // Set Navigation/Measurement Rate to 1Hz
   response &= setUART2BAUD_115200(); // Set UART2 Baud rate
-#ifndef F9R
+#ifdef F9P
   response &= disableSurveyIn(); // Disable Survey_In mode
   response &= setRTCMoff(); // Disable RTCM output on UART2
 #endif  
-  response &= setUART2nmea_gst(); // Enable NMEA GST sentences output on UART2
   response &= setUART2nmea(); // Enable NMEA output on UART2
   Serial.println("NMEA enabled on uart2");
   response &= setTimeGrid(); // Set the TP1 TimeGrid to GPS so TIM_TM2 messages are aligned with GPS time
+//  if (response == false) { Serial.println("setTimeGrid failed"); }
 
   if (response == false) {
     Serial.println("Panic!! Unable to initialize GNSS!");
@@ -640,28 +913,7 @@ void setup()
     // don't do anything more:
     while(1);
   }
-  // Check the modePin and set the navigation dynamic model
-  if (digitalRead(modePin) == LOW) {
-    Serial.println("BASE mode selected");
-    setNAVstationary(); // Set Static Navigation Mode (use this for the Base Logger)    
-  }
-  else {
-    base_mode = false; // Clear base_mode flag
-    Serial.println("ROVER mode selected");
-    // Select one mode for the mobile Rover Logger
-    setNAVportable(); // Set Portable Navigation Mode
-    //setNAVpedestrian(); // Set Pedestrian Navigation Mode
-    //setNAVautomotive(); // Set Automotive Navigation Mode
-    //setNAVsea(); // Set Sea Navigation Mode
-    //setNAVair1g(); // Set Airborne <1G Navigation Mode
-    //setNAVair2g(); // Set Airborne <2G Navigation Mode
-    //setNAVair4g(); // Set Airborne <4G Navigation Mode
-    //setNAVwrist(); // Set Wrist Navigation Mode
-  }
 
-  Serial1.begin(230400); // Start Serial1 at 230400 baud
-  
-  Serial.println("GNSS initialized!");
 
 #ifndef NoLED
 #ifndef NeoPixel
@@ -698,7 +950,90 @@ void setup()
 #ifdef NeoPixel
       write_color = green; // Reset the write color to green
 #endif
-          
+
+
+// load previous alignment or activate auto-alignment if needed
+#ifdef F9R
+  // Check the modePin and set the navigation dynamic model
+  if (digitalRead(modePin) == LOW) {
+    HPS_mode = false;
+    Serial.println("HPS desactivated");
+    i2cGNSS.setVal8(UBLOX_CFG_SFCORE_USE_SF, 0x00, VAL_LAYER_RAM); // disable sensor fusion
+    // Select one dynamic without Fusion Engine
+    setClassicalDynamic();
+  }
+  else {
+    HPS_mode = true; 
+    Serial.println("HPS activated");
+    i2cGNSS.setVal8(UBLOX_CFG_SFCORE_USE_SF, 0x01, VAL_LAYER_RAM); // enable sensor fusion
+#ifdef DEBUG
+    Serial.print("IMU alignment before: "); Serial.print(i2cGNSS.getESFroll()); Serial.print(" "); Serial.print(i2cGNSS.getESFpitch()); Serial.print(" "); Serial.println(i2cGNSS.getESFyaw());
+#endif    
+    // Select one dynamic with Fusion Engine
+#ifdef ROVER_HPS_AUTOMOTIVE    
+    setNAVautomotive();
+#endif    
+#ifdef ROVER_HPS_RLM // robotic lawn mower
+    setNAVrobotic();
+#endif    
+#ifdef ROVER_HPS_E_SCOOTER  
+    setNAVescooter();
+#endif    
+
+#ifdef UseAutoAlign
+    if (digitalRead(SurveyInPin) == LOW) {
+      i2cGNSS.setESFAutoAlignment(true, VAL_LAYER_RAM);
+      Serial.println("Auto-align reset");
+    }
+    else
+    {
+      if (read_align_file()==true)
+      {
+        i2cGNSS.setESFAutoAlignment(false, VAL_LAYER_RAM);
+        Serial.println("Previous alignment loaded. No auto-align");
+      }
+      else
+      {
+        i2cGNSS.setESFAutoAlignment(true, VAL_LAYER_RAM);
+        Serial.println("No previous alignment loaded. Auto-align activated");
+      }
+    }  
+#else
+    i2cGNSS.setESFAutoAlignment(false, VAL_LAYER_RAM);
+    if (read_align_file()==true)
+    {
+      Serial.println("Previous alignment loaded.");
+    }
+    else
+    {
+      Serial.println("No previous alignment loaded.");
+    };
+#endif    
+#ifdef DEBUG
+    Serial.print("IMU alignment after: "); Serial.print(i2cGNSS.getESFroll()); Serial.print(" "); Serial.print(i2cGNSS.getESFpitch()); Serial.print(" "); Serial.println(i2cGNSS.getESFyaw());
+#endif    
+  }
+#endif
+
+#ifdef F9P
+  // Check the modePin and set the navigation dynamic model
+  if (digitalRead(modePin) == LOW) {
+    Serial.println("BASE mode selected");
+    setNAVstationary(); // Set Static Navigation Mode (use this for the Base Logger)    
+// XXX désactiver NMEA sur Uart1 et 2
+  }
+  else {
+    base_mode = false; // Clear base_mode flag
+    Serial.println("ROVER mode selected");
+    // Select one mode for the mobile Rover Logger
+    setClassicalDynamic();
+  }
+#endif  
+
+  Serial1.begin(230400); // Start Serial1 at 230400 baud
+  
+  Serial.println("GNSS initialized!");
+
   Serial.println("Waiting for GNSS fix...");
 }
 
@@ -803,7 +1138,7 @@ void loop() // run over and over again
           //setRATE_2Hz(); // Set Navigation/Measurement Rate to 2 Hz
           setRATE_1Hz(); // Set Navigation/Measurement Rate to 1 Hz
           
-#ifndef F9R
+#ifdef F9P
           // If we are in BASE mode, check the SURVEY_IN pin
           if (base_mode == true) {
             if (digitalRead(SurveyInPin) == LOW) {
@@ -829,9 +1164,10 @@ void loop() // run over and over again
     }
     break;
 
-    // (Re)Start RAWX messages
+    // (Re)Start the UBX and NMEA messages
     case start_rawx: {
-      setRAWXon(); // (Re)Start the UBX and NMEA messages
+      setUBXon(); // (Re)Start the UBX messages
+      setNMEAon(); // (Re)Start the NMEA messages
 
       bufferPointer = 0; // (Re)initialise bufferPointer
 
@@ -871,7 +1207,12 @@ void loop() // run over and over again
       rawx_filename[5] = monU;
       rawx_filename[6] = dayT;
       rawx_filename[7] = dayU;
+#ifdef F9P  
       if (base_mode == false) rawx_filename[9] = 'r';
+#endif      
+#ifdef F9R  
+      rawx_filename[9] = 'r';
+#endif      
       rawx_filename[11] = hourT;
       rawx_filename[12] = hourU;
       rawx_filename[13] = minT;
@@ -1100,7 +1441,12 @@ void loop() // run over and over again
           // NAV_POSLLH is class 0x01 ID 0x02
           // NAV_PVT is class 0x01 ID 0x07
           // NAV_ATT is class 0x01 ID 0x05
+          // NAV_SAT is class 0x01 ID 0x35
+          // NAV_RELPOSNED is class 0x01 ID 0x3c
           // NAV-STATUS is class 0x01 ID 0x03
+          // ESF-STATUS is class 0x10 ID 0x10
+          // ESF-ALG is class 0x10 ID 0x14
+          // ESF-RAW is class 0x10 ID 0x03
           case (looking_for_class): {
             ubx_class = c;
             ubx_expected_checksum_A = ubx_expected_checksum_A + c; // Update the expected checksum
@@ -1108,7 +1454,7 @@ void loop() // run over and over again
             ubx_nmea_state = looking_for_ID; // Now look for ID byte
 #ifdef DEBUG
             // Class syntax checking
-            if ((ubx_class != 0x02) and (ubx_class != 0x0d) and (ubx_class != 0x01)) {
+            if ((ubx_class != 0x02) and (ubx_class != 0x0d) and (ubx_class != 0x01) and (ubx_class != 0x10)) {
               Serial.println("Panic!! Was expecting Class of 0x02 or 0x0d or 0x01 but did not receive one!");
               ubx_nmea_state = sync_lost;
             }
@@ -1122,16 +1468,20 @@ void loop() // run over and over again
             ubx_nmea_state = looking_for_length_LSB; // Now look for length LSB
 #ifdef DEBUG
             // ID syntax checking
-            if ((ubx_class == 0x02) and ((ubx_ID != 0x15) and (ubx_ID != 0x13))) {
-              Serial.println("Panic!! Was expecting ID of 0x15 or 0x13 but did not receive one!");
+            if ((ubx_class == 0x01) and ((ubx_ID != 0x02) and (ubx_ID != 0x07) and (ubx_ID != 0x05) and (ubx_ID != 0x03) and (ubx_ID != 0x35) and (ubx_ID != 0x3c))) {
+              Serial.println("Panic!! Unknown ID for UBX class 0x01");
+              ubx_nmea_state = sync_lost;
+            }
+            else if ((ubx_class == 0x02) and ((ubx_ID != 0x15) and (ubx_ID != 0x13))) {
+              Serial.println("Panic!! Unknown ID for UBX class 0x02");
               ubx_nmea_state = sync_lost;
             }
             else if ((ubx_class == 0x0d) and (ubx_ID != 0x03)) {
-              Serial.println("Panic!! Was expecting ID of 0x03 but did not receive one!");
+              Serial.println("Panic!! Unknown ID for UBX class 0x0d");
               ubx_nmea_state = sync_lost;
             }
-            else if ((ubx_class == 0x01) and ((ubx_ID != 0x02) and (ubx_ID != 0x07) and (ubx_ID != 0x05) and (ubx_ID != 0x03))) {
-              Serial.println("Panic!! Was expecting ID of 0x02 or 0x07 or 0x03 but did not receive one!");
+            else if ((ubx_class == 0x10) and ((ubx_ID != 0x03) and (ubx_ID != 0x10) and (ubx_ID != 0x14))) {
+              Serial.println("Panic!! Unknown ID for UBX class 0x10");
               ubx_nmea_state = sync_lost;
             }
 #endif
@@ -1247,6 +1597,67 @@ void loop() // run over and over again
 #endif
                 }
               }
+            }
+            // If this is a ESF_ALG message, check the "IMU-mount alignment status" byte (byte offset 5)
+            if ((ubx_class == 0x10) and (ubx_ID == 0x14)) { // Is this a ESF_ALG message (class 0x10 ID 0x14)?
+              if (ubx_length == 11) { // Is this byte offset 5? (ubx_length will be 16 for byte offset 0, so will be 11 for byte offset 5)
+#ifdef UseAutoAlign
+                align_state = (c & 0x0e) >> 1;
+#endif
+#ifdef DEBUG
+                Serial.print("ESF_ALG status: ");
+                if ((c & 0x01) == 0x00) {
+                  Serial.print("manual/");
+                }
+                else {
+                  Serial.print("auto/");
+                }
+                
+                if ((c & 0x0e) == 0x00) {
+                  Serial.println("fixed");
+                }
+                else if ((c & 0x0e) == 0x02) {
+                  Serial.println("roll-pitch");
+                }
+                else if ((c & 0x0e) == 0x04) {
+                  Serial.println("roll-pitch-yaw");
+                }
+                else if ((c & 0x0e) == 0x06) {
+                  Serial.println("coarse");
+                }
+                else if ((c & 0x0e) == 0x08) {
+                  Serial.println("fine");
+                }
+                else {
+                  Serial.println("reserved");
+                }
+#endif
+              }
+            }  
+            // If this is a ESF_STATUS message, check calibStatus of Sensors bytes (byte offset 17 + n*4)
+            if ((ubx_class == 0x10) and (ubx_ID == 0x10)) { // Is this a ESF_STATUS message (class 0x10 ID 0x10)?
+#ifdef DEBUG
+              if ((ubx_length >= 16) and (num_sens == 0)) { // beginning of ESF_STATUS parsing that size depend on number of sensors : 16 + numSens·4
+                Serial.print("NumSens: ");
+                num_sens = (ubx_length - 16) / 4;
+                Serial.println(num_sens);
+                Serial.print("ESF_STATUS calib: ");
+              }
+              else
+              {
+                if (ubx_length == (num_sens*4 - 1)) { // Is this byte offset 17+n*4? (ubx_length will be 16 + numSens*4 for byte offset 0)
+//                  7 sensors : ubx_length 16 + 7*4 = 44 for byte offset 0, 
+//                  17+0  -> 44 - 17 = 27
+//                  17+4               23
+                  Serial.print((c & 0x03));
+                  num_sens = num_sens - 1;
+                }
+                else if (ubx_length == 1) {
+                  Serial.println();
+                }
+                
+              }
+#endif
             }
             ubx_length = ubx_length - 1; // Decrement length by one
             ubx_expected_checksum_A = ubx_expected_checksum_A + c; // Update the expected checksum
@@ -1483,9 +1894,10 @@ void loop() // run over and over again
     }
     break;
 
-    // Disable RAWX messages, save any residual data and close the file, possibly for the last time
+    // Disable UBX and NMEA messages, save any residual data and close the file, possibly for the last time
     case close_file: {
-      setRAWXoff(); // Disable RAWX messages
+      setUBXoff(); // Disable UBX messages
+      setNMEAoff(); // Disable NMEA messages
       int waitcount = 0;
       while (waitcount < dwell) { // Wait for residual data
         while (SerialBuffer.available()) {
@@ -1626,6 +2038,76 @@ void loop() // run over and over again
       // Either the battery is low or the user pressed the stop button:
       if (stop_pressed == true) {
         // Stop switch was pressed so just wait for a reset
+
+#ifdef UseAutoAlign 
+        {
+        i2cGNSS.saveConfiguration(0x0000);
+#ifdef DEBUG
+        Serial.println("Configuration saved to BBR/Flash");
+#endif
+        }  
+//        uint8_t align_state = (i2cGNSS.packetUBXESFALG->data.flags.bits.status) ; // syntax for futur developpemnt
+        if (align_state == 4)
+        { // fine alignment reached -> alignment angles stored to SD card
+          align_dataFile = sd.open(align_filename, O_READ | O_WRITE | O_CREAT);
+
+          // if the file opened okay, write to it:
+          if (align_dataFile) {
+            Serial.print("Writing alignment data: ");
+            switch (align_state) {
+              case 0:
+                align_dataFile.println("fixed");
+                break;
+              case 1:
+                align_dataFile.println("roll-pitch");
+                break;
+              case 2:
+                align_dataFile.println("roll-pitch-yaw");
+                break;
+              case 3:
+                align_dataFile.println("coarse");
+                break;
+              case 4:
+                align_dataFile.println("fine");
+                break;
+              default:
+                align_dataFile.println("reserved");
+                break;
+            }    
+            
+            align_dataFile.println(i2cGNSS.getESFroll());
+            align_dataFile.println(i2cGNSS.getESFpitch());
+            align_dataFile.println(i2cGNSS.getESFyaw());
+
+      #ifdef DEBUG
+            // Set file write time
+            if (!align_dataFile.timestamp(T_WRITE, (RTCyear+2000), RTCmonth, RTCday, RTChours, RTCminutes, RTCseconds)) {
+              Serial.println("Warning! Could not set file write timestamp!");
+            }
+      #else
+            align_dataFile.timestamp(T_WRITE, (RTCyear+2000), RTCmonth, RTCday, RTChours, RTCminutes, RTCseconds);
+      #endif
+      #ifdef DEBUG
+            // Set file access time
+            if (!align_dataFile.timestamp(T_ACCESS, (RTCyear+2000), RTCmonth, RTCday, RTChours, RTCminutes, RTCseconds)) {
+              Serial.println("Warning! Could not set file access timestamp!");
+            }
+      #else
+            align_dataFile.timestamp(T_ACCESS, (RTCyear+2000), RTCmonth, RTCday, RTChours, RTCminutes, RTCseconds);
+      #endif      
+            // close the file:
+            align_dataFile.close();
+            Serial.print(align_state);
+            Serial.println(" done.");
+          } else {
+            // if the file didn't open, print an error:
+            Serial.print("error opening ");
+            Serial.println(align_filename);
+          }
+        }      
+#endif
+
+        
 #ifndef NoLED
 #ifdef NeoPixel
         setLED(red); // Set the NeoPixel to red
@@ -1646,18 +2128,23 @@ void loop() // run over and over again
         digitalWrite(RedLED, HIGH); // Turn the red LED on
 #endif
 #endif
-        // Check the battery voltage. Make sure it has been OK for at least 5 seconds before continuing
+        // Check the battery voltage. Make sure it has been OK for at least 10 seconds before continuing
         int high_for = 0;
-        while (high_for < 500) {
+        while (high_for < 10) {
           // read battery voltage
           vbat = analogRead(A7) * (2.0 * 3.3 / 1023.0);
-          if (vbat < LOWBAT) {
+#ifdef DEBUG
+          Serial.print("Wait for charge. Battery(V): ");
+          Serial.println(vbat, 2);
+#endif
+
+          if (vbat < LOWBAT+0.05) {
             high_for = 0; // If battery voltage is low, reset the count
           }
           else {
             high_for++; // Increase the count
           }
-          delay(10); // Wait 10msec
+          delay(1000); // Wait 10msec
         }
         // Now loop round again and restart rawx messages before opening a new file
 #ifndef NoLED
@@ -1672,10 +2159,11 @@ void loop() // run over and over again
     }
     break;
 
-    // RAWX data lost sync so disable RAWX messages, save any residual data, close the file, open another and restart RAWX messages
+    // UBX data lost sync so disable UBX and NMEA messages, save any residual data, close the file, open another and restart UBX and NMEA messages
     // Don't update the next RTC alarm - leave it as it is
     case restart_file: {
-      setRAWXoff(); // Disable RAWX messages
+      setUBXoff(); // Disable UBX messages
+      setNMEAoff(); // Disable NMEA messages
       int waitcount = 0;
       while (waitcount < dwell) { // Wait for residual data
         while (SerialBuffer.available()) {
