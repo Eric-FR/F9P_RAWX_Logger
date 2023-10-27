@@ -419,7 +419,7 @@ significant overhead given that the ISR runs every 434 usec, but it is a price w
 
 ![TC3_ISR_1.JPG](img/TC3_ISR_1.JPG)
 
-![TC3_ISR_2.JPG](TC3_ISR_2.JPG)
+![TC3_ISR_2.JPG](img/TC3_ISR_2.JPG)
 
 ## RAWX_Logger_F9P_I2C
 
