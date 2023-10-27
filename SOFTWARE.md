@@ -32,9 +32,9 @@ In summary:
 - Scroll further down the list and install the "Adafruit SAMD Boards"
 - Close the Boards Manager
 
-![URLs](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/URLs.JPG)
+![URLs](img/URLs.JPG)
 
-![Boards](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/Boards.JPG)
+![Boards](img/Boards.JPG)
 
 You may see warning messages about "skipping script execution". You can ignore these.
 
@@ -51,7 +51,7 @@ Click on the Tools menu and hover over the line which says "Port". All being wel
 says "COM4 (Adafruit Feather M0)". The COM number may be different depending on how many devices you have attached.
 Click on that line.
 
-![Port](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/Port.JPG)
+![Port](img/Port.JPG)
 
 Click on the Tools menu again and hover over the line which says "Board". Use the down arrow to scroll down to the
 Adafruit SAMD boards. Click on the line which says "Adafruit Feather M0".
@@ -59,7 +59,7 @@ Adafruit SAMD boards. Click on the line which says "Adafruit Feather M0".
 After a short delay, you should see the text in the bottom right corner of the IDE window
 change to "Adafruit Feather M0 on COM4".
 
-![Board](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/Board.JPG)
+![Board](img/Board.JPG)
 
 Click on the File menu and hover over the line which says "Examples". Hover over the line which says "01.Basics"
 and click on the entry which says "Blink".
@@ -115,7 +115,7 @@ and click "Install".
 
 ### SparkFun Ublox Library
 
-The [Arduino folder](https://github.com/PaulZC/F9P_RAWX_Logger/tree/master/Arduino) also contains an Arduino sketch called RAWX_Logger_F9P_I2C.
+The [Arduino folder](Arduino) also contains an Arduino sketch called RAWX_Logger_F9P_I2C.
 This code is a little more experimental than the main Logger code, but is also more efficient. It uses the [SparkFun Ublox library](https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library)
 to communicate with the ZED-F9P over its I2C port. All of the message configuration is done over I2C, leaving the UART port clear for the RAWX
 messages themselves. This has the significant advantage that the UBX message acknowledgements go over I2C instead of UART, meaning
@@ -128,7 +128,7 @@ You can now close the library manager.
 
 ## Download RAWX_Logger_F9P
 
-You can find the logger code in the [Arduino folder](https://github.com/PaulZC/F9P_RAWX_Logger/tree/master/Arduino)
+You can find the logger code in the [Arduino folder](Arduino)
 
 The best way to download the code is to clone the repository using GitHub Desktop. That way you can keep up to date with new versions.
 
@@ -151,7 +151,7 @@ All being well, you should now have a Documents\Arduino\RAWX_Logger_F9P folder c
 In the Ardino IDE, click on the File menu and then "Open...". When the file window opens double-click on the RAWX_Logger_F9P folder
 and then double-click on the RAWX_Logger_F9P.ino file. The logger code will open in a new window. You can now close the Blink window.
 
-## Next > [HARDWARE.md](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/HARDWARE.md)
+## Next > [HARDWARE.md](HARDWARE.md)
 
 
 
