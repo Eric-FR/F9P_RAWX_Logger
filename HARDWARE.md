@@ -46,7 +46,7 @@ Connect the following pins:
 - Adalogger TX (D1) to SparkFun RX/MOSI
 - Adalogger RST to SparkFun RST
 
-![Connections](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/Connections.JPG)
+![Connections](img/Connections.JPG)
 
 The GPS-RTK2 board has its own 3.3V regulator on board. We will use this and power it from the Adalogger VBUS pin. That way it can be powered via the Adalogger's
 USB socket or the Adalogger LiPo battery.
@@ -55,7 +55,7 @@ These connections will also work if you want to power the Adalogger using the US
 
 **Be careful that you do not connect power via the Adalogger USB and SparkFun USB-C sockets at the same time. BAD THINGS WILL HAPPEN IF YOU DO!**
 
-![Power](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/Power.JPG)
+![Power](img/Power.JPG)
 
 The RST connection is only necessary if you want the Adalogger reset switch to be able to reset the ZED-F9P too.
 
@@ -63,7 +63,7 @@ Connect the SparkFun board to a suitable **active** L1/L2 GNSS antenna using the
 
 If you want to try the experimental (but very efficient) RAWX_Logger_F9P_I2C code, you will also need to connect up the SDA and SCL pins:
 
-![I2C](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/I2C.JPG)
+![I2C](img/I2C.JPG)
 
 ## Rover and Base Mode
 
@@ -72,7 +72,7 @@ Connect the Adalogger A0 pin to GND to put the logger into base mode. Leave A0 f
 - The F9P navigation engine dynamic model is set to "airborne <1g" for the rover and "stationary" for the base
 - (The dynamic models can be changed by editing the Arduino code)
 
-![Extras](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/Extras.JPG)
+![Extras](img/Extras.JPG)
 
 The logger also supports Survey_In mode where the ZED-F9P calculates its own position and then generates RTCM 3 correction messages on the UART2 TX2 pin.
 If you want to use Survey_In, connect pin A3 to GND. You will need to have A0 connected to ground too. The green LED will flash (or the NeoPixel will turn magenta)
@@ -104,7 +104,7 @@ When you provide power from a UAV battery, the Adalogger will draw an extra 100m
 to do this, you can remove the LiPo charger chip by carefully cutting through its legs with a scalpel blade. If you do this, you won't then be able recharge the LiPo battery through the Adalogger.
 You will need to use a [separate charger](https://www.adafruit.com/product/1904) instead. Your will of course void the Adalogger's warranty too!
 
-![Adalogger_LiPo](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/Adalogger_LiPo.JPG)
+![Adalogger_LiPo](img/Adalogger_LiPo.JPG)
 
 You could connect 5V from the battery eliminator to the USB/VBUS pin but you _must_ make sure you do not connect either the Adalogger USB socket or the SparkFun USB-C socket to a
 computer or a power supply. **BAD THINGS WILL HAPPEN IF YOU DO!**
@@ -123,7 +123,7 @@ using the arrow icon below the Edit menu.
 As soon as the upload is finished, click on the Tools menu and then "Serial Monitor". Change the baud rate to 115200 using the pull-down menu
 at the bottom of the serial monitor window. All being well, after 10 seconds you should see messages saying:
 
-![Serial_Monitor](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/Serial_Monitor.JPG)
+![Serial_Monitor](img/Serial_Monitor.JPG)
 
 Now connect the LiPo battery. You can then disconnect the USB cable if you want to and the logger will keep logging, drawing power from the LiPo battery.
 
