@@ -1,21 +1,18 @@
 # HARDWARE
 
-This guide describes how to connect the Adafruit Feather M0 Adalogger to the SparkFun GPS-RTK2 board to create the F9P_RAWX_Logger
+This guide describes how to connect the Adafruit Feather M0 Adalogger to the SparkFun F9P and F9R boards to create a F9P_RAWX_Logger or a F9R_RAWX_Logger
 
 ## Adafruit Feather M0 Adalogger
 
 The [Adafruit Feather M0 Adalogger](https://www.adafruit.com/product/2796) is a versatile board equipped with a SAMD21G18A ARM Cortex-M0+
 microcontroller (as used on the Arduino Zero), a micro-SD card socket and a LiPo battery charger.
 
-If your Adalogger is still connected to your computer, disconnect it before proceeding. Make sure the LiPo battery is disconnected too.
+The present design doesn't allow to take advantage of battery capabilities of the board ([see issue1](https://github.com/Eric-FR/F9x_RAWX_Logger/issues/1)).
+Developpements under way (2024-2025...).
 
-The Adalogger uses USB power to charge the LiPo battery at 100mA. Charging a larger battery can take quite a long time. Adafruit offer
-separate miniature [LiPo chargers](https://www.adafruit.com/product/1904) which can charge larger batteries at 500mA.
-
-Choose a good quality micro-SD card. A 4GB card should provide more than enough storage for your RAWX files. Make sure the card is formatted
+Choose a good quality micro-SD card. A 4GB card should provide more than enough storage for your RAWX files, at least with F9P. Make sure the card is formatted
 as FAT32. If you have problems formatting the card, you might need to download and use the official SD card formatter from the
-[SD Association](https://www.sdcard.org/downloads/formatter/index.html). Insert the card into the Adalogger before connecting USB
-or LiPo battery power. **Don't insert or remove the card while power is connected!**
+[SD Association](https://www.sdcard.org/downloads/formatter/index.html). Insert the card into the Adalogger before connecting USB. **Don't insert or remove the card while power is connected!**
 
 There are many ways to hook up the Adalogger. The simplest is to use header pins and jumper wires. There are full instructions
 available on the [Adafruit website](https://learn.adafruit.com/adafruit-feather-m0-adalogger/assembly).
@@ -26,6 +23,23 @@ The [SparkFun GPS-RTK2 Board](https://www.sparkfun.com/products/15136) is equipp
 [u-blox ZED-F9P](https://www.u-blox.com/en/product/zed-f9p-module) GNSS module.
 
 The u-blox ZED-F9P is a sophisticated dual band (L1 + L2) GNSS receiver which can act as a Real Time Kinematic base or rover. It has a variety of interfaces:
+2 UART, SPI, I2C and USB. SparkFun have included their Qwiic I2C connectors on the board, making it easy to interface it to their other Qwiic boards.
+For the RAWX_Logger we will be using the I2C interface for configuration and the UART1 interface for data transfer.
+
+The main goal of this project is to log RAWX messages which can be post-processed (PPK) using [rtklibexplorer's](https://rtklibexplorer.wordpress.com/) version of
+[RTKLIB](http://rtkexplorer.com/downloads/rtklib-code/). Indeed, some NMEA messages are also recorded in Rover mode.; it does not currently make use of the F9P's RTK features. However, you will find UART2, SURVEY_IN and RTCM
+configuration messages defined in the code which will be useful if you do want to try RTK.
+
+Like the Adalogger, there are many ways to hook up the F9P board. Again, the simplest is to use header pins and jumper wires.
+
+## SparkFun GPS-RTK DR Board
+
+The [SparkFun GPS-RTK Dead Reckoning Breakout](https://www.sparkfun.com/products/16344) is equipped with the [u-blox ZED-F9R](https://www.u-blox.com/en/product/zed-f9r-module)
+a GNSS module combined with an IMU.
+
+The u-blox ZED-F9R is a sophisticated dual band (L1 + L2) GNSS receiver including an Inertial Measurement Unit (IMU). The GNSS part can act as a Real Time Kinematic rover.
+The IMU includes 3 accelerometers and 
+It has a variety of interfaces:
 UART, SPI, I2C and USB. SparkFun have included their Qwiic I2C connectors on the board, making it easy to interface it to their other Qwiic boards.
 For the RAWX_Logger we will only be using the UART interface (the Arduino code disables the I2C and USB interfaces - edit the code if you want
 these to remain enabled).
