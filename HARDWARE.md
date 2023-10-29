@@ -27,8 +27,8 @@ The u-blox ZED-F9P is a sophisticated dual band (L1 + L2) GNSS receiver which ca
 For the RAWX_Logger we will be using the I2C interface for configuration and the UART1 interface for data transfer.
 
 The main goal of this project is to log RAWX messages which can be post-processed (PPK) using [rtklibexplorer's](https://rtklibexplorer.wordpress.com/) version of
-[RTKLIB](http://rtkexplorer.com/downloads/rtklib-code/). Indeed, some NMEA messages are also recorded in Rover mode.; it does not currently make use of the F9P's RTK features. However, you will find UART2, SURVEY_IN and RTCM
-configuration messages defined in the code which will be useful if you do want to try RTK.
+[RTKLIB](http://rtkexplorer.com/downloads/rtklib-code/). Indeed, some NMEA messages are also recorded in Rover mode.
+RTK capability of F9P can be used by receiving RTCM corrections on UART2. UART2 can also send RTCM corrections in base mode.
 
 Like the Adalogger, there are many ways to hook up the F9P board. Again, the simplest is to use header pins and jumper wires.
 
@@ -38,17 +38,13 @@ The [SparkFun GPS-RTK Dead Reckoning Breakout](https://www.sparkfun.com/products
 a GNSS module combined with an IMU.
 
 The u-blox ZED-F9R is a sophisticated dual band (L1 + L2) GNSS receiver including an Inertial Measurement Unit (IMU). The GNSS part can act as a Real Time Kinematic rover.
-The IMU includes 3 accelerometers and 
-It has a variety of interfaces:
-UART, SPI, I2C and USB. SparkFun have included their Qwiic I2C connectors on the board, making it easy to interface it to their other Qwiic boards.
-For the RAWX_Logger we will only be using the UART interface (the Arduino code disables the I2C and USB interfaces - edit the code if you want
-these to remain enabled).
+The IMU includes 3 accelerometers and 3 gyroscopes. It can also receive wheel tick contact (and direction contact). Wheel tick or vehicule speed may also be sent by software. 
+It has same interfaces as F9P plus wheel tick and direction contacts.
 
-This project only logs RAWX messages which can be post-processed (PPK) using [rtklibexplorer's](https://rtklibexplorer.wordpress.com/) version of
-[RTKLIB](http://rtkexplorer.com/downloads/rtklib-code/); it does not currently make use of the F9P's RTK features. However, you will find UART2, SURVEY_IN and RTCM
-configuration messages defined in the code which will be useful if you do want to try RTK.
+Although the main goal of this project is to log GNSS RAW messages and IMU RAW messages, we are not aware of a current free software that can perform post-processing of this combination.
+Some NMEA messages are also recorded. RTK capability of F9R can be used by receiving RTCM corrections on UART2. IMU calibration and alignement should take advantage of RTK.
 
-Like the Adalogger, there are many ways to hook up the F9P board. Again, the simplest is to use header pins and jumper wires.
+Like the F9P board, there are many ways to hook up the F9R board. Again, the simplest is to use header pins and jumper wires.
 
 ## Connections
 
