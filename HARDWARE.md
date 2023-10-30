@@ -139,21 +139,10 @@ You can connect a push switch between GND and the SparkFun INT pin. Pushing it w
 Instead of a switch, you can connect the INT pin to a 3.3V logic signal from (e.g.) your UAV camera trigger. (The signal must be between 0V and 3.3V.
 Higher voltages will cause permanent damage to the ZED-F9P!)
 
-## UAV Power
+## PCB
 
-If you want to power the logger from your UAV battery, use a suitable 5V battery eliminator (DC-DC converter) to drop your UAV battery voltage down to 5V. Connect the 5V to the Adalogger
-using the micro-USB socket and connect a small (~100mAh) LiPo battery to the Adalogger too. When you disconnect the UAV battery at the end of a flight, the Adalogger will switch over
-to the LiPo battery and will keep logging until the battery voltage starts to fall. The log file will be closed automatically when the battery voltage is low (or if you press the stop
-switch).
+## Casing
 
-When you provide power from a UAV battery, the Adalogger will draw an extra 100mA from the battery eliminator to recharge the LiPo battery. This will cut down your flight time. If you do not want the Adalogger
-to do this, you can remove the LiPo charger chip by carefully cutting through its legs with a scalpel blade. If you do this, you won't then be able recharge the LiPo battery through the Adalogger.
-You will need to use a [separate charger](https://www.adafruit.com/product/1904) instead. Your will of course void the Adalogger's warranty too!
-
-![Adalogger_LiPo](img/Adalogger_LiPo.JPG)
-
-You could connect 5V from the battery eliminator to the USB/VBUS pin but you _must_ make sure you do not connect either the Adalogger USB socket or the SparkFun USB-C socket to a
-computer or a power supply. **BAD THINGS WILL HAPPEN IF YOU DO!**
 
 ## Testing
 
