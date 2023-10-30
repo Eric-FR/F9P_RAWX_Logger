@@ -53,7 +53,7 @@ The HC-05 is a Bluetooth (v2.0) module [compatible with Arduino](https://howtome
 Although many modeles ara available online, they don't all provide equally stable BT connection.
 We recommand [DSD](https://www.amazon.fr/DSD-TECH-HC-05-Pass-through-Communication/dp/B01G9KSAF6) or [Az-Delivery](https://www.az-delivery.de/en/products/hc-05-6-pin).
 
-The HC-05 need to be configured prior to use, mostly for baud rate.
+The HC-05 need to be configured prior to use, mostly for baud rate (to 115200).
 One can use an [Arduino board](https://www.instructables.com/Change-the-Baud-Rate-of-HC-05-Bluetooth-Module-Usi/) or an [USB-TTL cable](https://www.amazon.fr/FT232RL-Serial-Arduino-C%C3%A2ble-Modulo/dp/B075XK737D).
 
 Pins are included in HC-05 modules.
@@ -73,7 +73,6 @@ Connect the following pins:
 - HC-05 TXD to SparkFun RX2
 - HC-05 RXD to SparkFun TX2
 
-![Connections](img/F9P_logger_connections.png)
 
 SparkFun boards have their own 3.3V regulator on board. We will use this and power it from the Adalogger VBUS pin. 
 
@@ -85,29 +84,52 @@ These connections will also work if you want to power the Adalogger using the US
 
 Connect the SparkFun board to a suitable **active** L1/L2 GNSS antenna using the uFL socket. You may need to use a [uFL to SMA adapter](https://www.sparkfun.com/products/9145).
 
-If you want to try the experimental (but very efficient) RAWX_Logger_F9P_I2C code, you will also need to connect up the SDA and SCL pins:
-
-![I2C](img/I2C.JPG)
-
-## Rover and Base Mode
+## F9P: Rover and Base Mode
 
 Connect the Adalogger A0 pin to GND to put the logger into base mode. Leave A0 floating for rover mode. The only differences between base and rover mode are:
 - The RAWX log filenames will start with "r_" for the rover and "b_" for the base
-- The F9P navigation engine dynamic model is set to "airborne <1g" for the rover and "stationary" for the base
+- The F9P navigation engine dynamic model is set to "Portable(default)" for the rover and "stationary" for the base
 - (The dynamic models can be changed by editing the Arduino code)
 
-![Extras](img/Extras.JPG)
+![F9P Connections](img/F9P_logger_connections.png)
 
 The logger also supports Survey_In mode where the ZED-F9P calculates its own position and then generates RTCM 3 correction messages on the UART2 TX2 pin.
 If you want to use Survey_In, connect pin A3 to GND. You will need to have A0 connected to ground too. The green LED will flash (or the NeoPixel will turn magenta)
-when the ZED-F9P has established a TIME solution. The RTCM messages are output at 115200 Baud, which is the default Baud rate of the SparkFun Bluetooth Mate.
+when the ZED-F9P has established a TIME solution. The RTCM messages are output at 115200 Baud.
+
+## F9R: Fusion Engine and Classical Mode
+
+Connect the Adalogger A0 pin to GND to turn off the High precision sensor fusion (HPS). Leave A0 floating to turn on HPS. 
+"HPS allow high-accuracy positioning in places with poor or no GNSS coverage. HPS is based on sensor fusion" between GNSS and IMU.
+
+HPS is supported in 3 dynamic models: Automotive, E-scooter and Robotic lawn mower.
+
+With HPS, the F9R navigation engine dynamic model is set to "Automotive". Without HPS, it is set "Portable(default)".
+(The dynamic models can be changed by editing the Arduino code)
+
+Without HPS, raw IMU data are still logged. 
+
+With HPS and Automotive, auto-alignement is activated (can be desactivated by editing the Arduino code).
+Once "fine" alignement is reached, alignement parameters are stored in the µSD card in a align.txt file at root, as follow:
+```
+fine
+1.04
+-11.91
+357.42
+```
+At next startup, if pin A3 is not connected to GND, alignement parameters will be read from the file and used for IMU orientation. 
+This will allows a much faster activation of the Fusion Engine.
+
+If pin A3 is connected to GND at startup, auto-alignement is restrated (or just remove from the µSD the existing align.txt file).
+
+You can also provide an equivalent file (incl. the 1<sup>st</sup> line with "fine" followed by roll, pitch and yaw) to provide IMU orientation for E-scooter and Robotic lawn mower. 
+
+![F9R Connections](img/F9R_logger_connections.png)
 
 ## Stopping the Logger
 
-If you are powering the logger from a LiPo battery, the logger monitors the LiPo battery voltage and will automatically close the log file when the battery voltage starts to fall.
-
-You can connect a "stop logging" push switch between the Adalogger A1 pin and GND. This switch is optional but pushing it will safely close the RAWX log file so you can
-unplug the power. If you unplug both USB and LiPo power while the logger is still logging, the RAWX log file will not get closed and you will lose your data!
+You need to connect a "stop logging" push switch between the Adalogger A1 pin and GND. Pushing this switch will safely close the RAWX log file so you can
+unplug the power. If you unplug USB while the logger is still logging, the RAWX log file will not get closed and you will lose your current data (last 15 minutes)!
 
 ## Waypoint / Timestamp Event
 
