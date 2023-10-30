@@ -46,6 +46,18 @@ Some NMEA messages are also recorded. RTK capability of F9R can be used by recei
 
 Like the F9P board, there are many ways to hook up the F9R board. Again, the simplest is to use header pins and jumper wires.
 
+
+## HC-05 BT module
+
+The HC-05 is a Bluetooth (v2.0) module [compatible with Arduino](https://howtomechatronics.com/tutorials/arduino/arduino-and-hc-05-bluetooth-module-tutorial/).
+Although many modeles ara available online, they don't all provide equally stable BT connection.
+We recommand [DSD](https://www.amazon.fr/DSD-TECH-HC-05-Pass-through-Communication/dp/B01G9KSAF6) or [Az-Delivery](https://www.az-delivery.de/en/products/hc-05-6-pin).
+
+The HC-05 need to be configured prior to use, mostly for baud rate.
+One can use an [Arduino board](https://www.instructables.com/Change-the-Baud-Rate-of-HC-05-Bluetooth-Module-Usi/) or an [USB-TTL cable](https://www.amazon.fr/FT232RL-Serial-Arduino-C%C3%A2ble-Modulo/dp/B075XK737D).
+
+Pins are included in HC-05 modules.
+
 ## Connections
 
 Connect the following pins:
