@@ -66,20 +66,22 @@ Connect the following pins:
 - Adalogger USB (VBUS) to SparkFun 5V
 - Adalogger RX (D0) to SparkFun TX/MISO
 - Adalogger TX (D1) to SparkFun RX/MOSI
-- Adalogger RST to SparkFun RST
+- Adalogger SDA to SparkFun SDA
+- Adalogger SCL to SparkFun SCL
+- HC-05 GND to SparkFun GND
+- HC-05 VCC to SparkFun 3V3
+- HC-05 TXD to SparkFun RX2
+- HC-05 RXD to SparkFun TX2
 
-![Connections](img/Connections.JPG)
+![Connections](img/F9P_logger_connections.png)
 
-The GPS-RTK2 board has its own 3.3V regulator on board. We will use this and power it from the Adalogger VBUS pin. That way it can be powered via the Adalogger's
-USB socket or the Adalogger LiPo battery.
+SparkFun boards have their own 3.3V regulator on board. We will use this and power it from the Adalogger VBUS pin. 
 
 These connections will also work if you want to power the Adalogger using the USB-C socket on the SparkFun board.
 
 **Be careful that you do not connect power via the Adalogger USB and SparkFun USB-C sockets at the same time. BAD THINGS WILL HAPPEN IF YOU DO!**
 
 ![Power](img/Power.JPG)
-
-The RST connection is only necessary if you want the Adalogger reset switch to be able to reset the ZED-F9P too.
 
 Connect the SparkFun board to a suitable **active** L1/L2 GNSS antenna using the uFL socket. You may need to use a [uFL to SMA adapter](https://www.sparkfun.com/products/9145).
 
