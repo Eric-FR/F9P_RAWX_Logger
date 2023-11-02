@@ -143,7 +143,13 @@ Higher voltages will cause permanent damage to the F9P/F9R!)
 
 We provide two PCB designs, one for each chip/board. [Gerber file format](https://en.wikipedia.org/wiki/Gerber_format).
 
-PCB for F9P.
+[PCB for F9P](ressources/Gerber_F9P_logger.zip).
+
+[PCB for F9R](ressources/Gerber_F9R_logger.zip).
+
+![PCB drawing](ressources/pcb_F9P_drawing.png)
+
+![PCB view](ressources/pcb_F9P_view1.jpg)
 
 ## Casing
 
