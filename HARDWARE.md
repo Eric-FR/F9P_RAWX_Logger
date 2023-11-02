@@ -137,9 +137,13 @@ You can connect a push switch between GND and the SparkFun INT pin. Pushing it w
 [RTKLIB](https://rtklibexplorer.wordpress.com/2018/10/26/event-logging-with-rtklib-and-the-u-blox-m8t-receiver/) can be used to export these events.
 
 Instead of a switch, you can connect the INT pin to a 3.3V logic signal from (e.g.) your UAV camera trigger. (The signal must be between 0V and 3.3V.
-Higher voltages will cause permanent damage to the ZED-F9P!)
+Higher voltages will cause permanent damage to the F9P/F9R!)
 
 ## PCB
+
+We provide two PCB designs, one for each chip/board. [Gerber file format](https://en.wikipedia.org/wiki/Gerber_format).
+
+PCB for F9P.
 
 ## Casing
 
