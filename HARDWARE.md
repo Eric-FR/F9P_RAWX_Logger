@@ -153,6 +153,36 @@ We provide two PCB designs, one for each chip/board. [Gerber file format](https:
 
 ## Casing
 
+Using [Hammond RP1135C](https://www.hammfg.com/part/RP1135C) enclosure (with transparent cover to see LEDs). IP65.
+
+An [USB cable](https://www.amazon.fr/gp/product/B07ZCZ8NL1/ref=ppx_yo_dt_b_asin_title_o03_s00?ie=UTF8&psc=1) to connect the feather board to the outer part of the enclosure.
+
+To allow the several external connexions and easy access to the SD card, all boards should not be at the same level.
+This can be done with [stacking headers](https://www.adafruit.com/product/2886), a single row for the F9P/F9R and two rows for the feather board.
+
+F9P stacking:
+
+![F9P stacking](img/F9P_PCB_stacking.jpg)
+
+F9R stacking:
+
+![FRP stacking](img/F9R_PCB.jpg)
+
+F9R stacking is including the [Adafruit CAN Bus FeatherWing - MCP2515](https://www.adafruit.com/product/5709) for connexion with car OBD
+(with DB9 connector and OBD Plug (16-pin) to DE-9 (DB-9) Socket Adapter Cable](https://www.adafruit.com/product/4841)) in order to get  tick count or speed from car.
+Under developpement.
+
+![FRP stacking](img/F9R_PCB_stacking.jpg)
+
+Inside the box:
+
+![F9P in the box](img/F9P_logger_box_open.jpg)
+
+Final state:
+
+![F9P logger closed](img/F9P_logger_box.jpg)
+
+
 
 ## Testing
 
