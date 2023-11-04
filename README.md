@@ -10,7 +10,7 @@ dual band (L1 + L2) GNSS receiver with integrated IMU. Optional [HC-05 module](h
 
 ![RAWX_Logger](img/gnss_logger_board.jpg)
 
-![RAWX_Logger](img/boitier_bt_ptt.jpg)
+![RAWX_Logger](img/F9P_logger_box.jpg)
 
 The RAWX files logged by this project can be processed using [rtklibexplorer's](https://rtklibexplorer.wordpress.com/)
 version of [RTKLIB](http://rtkexplorer.com/downloads/rtklib-code/)
