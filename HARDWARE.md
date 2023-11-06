@@ -186,21 +186,24 @@ Final state:
 
 ## Testing
 
-Leave the LiPo battery disconnected.
-
-Hook up the Adalogger and SparkFun boards as described above.
-
 Connect the Adalogger to your computer using a micro-USB cable. The logger will draw its power from the USB port.
 
-Open the Arduino IDE and open the RAWX_Logger_F9P.ino sketch. Check the Tools\Board and Tools\Port settings. Upload the code to the Adalogger
-using the arrow icon below the Edit menu.
+Open the Arduino IDE (tested with 1.8.19) and open the RAWX_Logger_F9x.ino sketch. Modify the code to choose F9P or F9R, depending on the board you ar using:
+```
+#define F9P // Comment this line out to use F9P 
+or
+#define F9R // Comment this line out to use F9R 
+```
+Check the Tools\Board and Tools\Port settings. Upload the code to the Adalogger using the arrow icon below the Edit menu.
 
 As soon as the upload is finished, click on the Tools menu and then "Serial Monitor". Change the baud rate to 115200 using the pull-down menu
-at the bottom of the serial monitor window. All being well, after 10 seconds you should see messages saying:
+at the bottom of the serial monitor window. All being well, after 10 seconds you should see messages saying (for F9P):
 
-![Serial_Monitor](img/Serial_Monitor.JPG)
+![Serial_Monitor](img/F9P_compilation.png)
 
-Now connect the LiPo battery. You can then disconnect the USB cable if you want to and the logger will keep logging, drawing power from the LiPo battery.
+For F9R
+
+![Serial_Monitor](img/F9R_compilation.png)
 
 The green LED on the Adalogger will light up when a GNSS fix is established and the logger is about to start logging RAWX data. If the LED doesn't illuminate
 after ~1 minute, check the antenna has a clear view of the sky. There are DEBUG messages that you can enable to help diagnose problems. The messages will
@@ -215,7 +218,7 @@ and upload the code again.
 The red LED on the Adalogger will flash quickly each time data is written to the SD card. Continuous red indicates: a problem with the SD card; or that the
 stop switch has been pressed; or that the LiPo battery is low.
 
-The logger will keep logging until the stop switch is pressed or the battery voltage starts to fall. A new file is opened every 15 minutes to minimise data
+The logger will keep logging until the stop switch is pressed. A new file is opened every 15 minutes to minimise data
 loss if the power is accidentially disconnected. The INTERVAL can be changed by editing the Arduino code. If you disconnect the power while the log file is
 still open, you will lose your data (the file will appear zero size).
 
