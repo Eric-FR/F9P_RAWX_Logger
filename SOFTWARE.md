@@ -80,7 +80,7 @@ We now need to install some libraries that are required by the RAWX_Logger_F9x c
 
 ### Adafruit GPS Library
 
-RAWX_Logger_F9x uses the Adafruit GPS library to parse the standard NMEA messages output by the F9P to set the M0's
+RAWX_Logger_F9x uses the Adafruit GPS library to parse the standard NMEA messages output by the F9x to set the M0's
 Real Time Clock (RTC).
 
 Click on the Tools menu and then click "Manage Libraries". The Library Manager window will open.
