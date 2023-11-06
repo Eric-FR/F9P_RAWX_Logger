@@ -1,12 +1,12 @@
 # SOFTWARE
 
-This guide describes how to install the Arduino IDE and all the libraries you will need for the F9P_RAWX_Logger.
+This guide describes how to install the Arduino IDE and all the libraries you will need for the RAWX_Logger_F9x.
 
 The guide assumes you will be using Windows; the process would be slightly different under Linux or OSX.
 
 ## Arduino IDE
 
-To begin, download and install the latest version of the [Arduino IDE](https://www.arduino.cc/en/Main/Software).
+To begin, download and install the latest (or, at least 1.8.19) version of the [Arduino IDE](https://www.arduino.cc/en/Main/Software).
 There are versions for Windows, Mac OS X and 32/64 bit Linux. The installation should be straight forward but there
 are [step-by-step instructions](https://www.arduino.cc/en/Guide/HomePage) available if you need them.
 
@@ -74,15 +74,13 @@ All being well, the red LED on the Adalogger should start to blink once per seco
 You may notice that the Adalogger COM port number has changed. This is normal. If you have problems please refer
 to the [Adafruit tutorial](https://learn.adafruit.com/adafruit-feather-m0-adalogger/using-with-arduino-ide).
 
-Now would be a good time to connect a small (~100mAh) LiPo battery to the Adalogger so it can start charging.
-
 ## Libraries
 
-We now need to install some libraries that are required by the RAWX_Logger_F9P code.
+We now need to install some libraries that are required by the RAWX_Logger_F9x code.
 
 ### Adafruit GPS Library
 
-RAWX_Logger_F9P uses the Adafruit GPS library to parse the standard NMEA messages output by the F9P to set the M0's
+RAWX_Logger_F9x uses the Adafruit GPS library to parse the standard NMEA messages output by the F9P to set the M0's
 Real Time Clock (RTC).
 
 Click on the Tools menu and then click "Manage Libraries". The Library Manager window will open.
@@ -92,14 +90,14 @@ and click "Install".
 
 ### RTCZero
 
-RAWX_Logger_F9P uses the Arduino RTCZero library to set the SAMD M0 RTC.
+RAWX_Logger_F9x uses the Arduino RTCZero library to set the SAMD M0 RTC.
 
 Use the library manager filter text box to search for "RTCZero". Hover over the line which says "RTCZero by Arduino"
 and click "Install".
 
 ### Bill Greiman's SdFat
 
-RAWX_Logger_F9P uses Bill Greiman's SdFat to access the Adalogger micro-SD card, write data to the RAWX log file rapidly
+RAWX_Logger_F9x uses Bill Greiman's SdFat to access the Adalogger micro-SD card, write data to the RAWX log file rapidly
 and set the create, write and access timestamps.
 
 Use the library manager filter text box to search for "sdfat". Hover over the line which says "SdFat by Bill Greiman"
@@ -107,7 +105,7 @@ and click "Install".
 
 ### Adafruit NeoPixel Library
 
-RAWX_Logger_F9P can use a NeoPixel to provide additional information during logging. You will need to install the Adafruit NeoPixel library
+RAWX_Logger_F9x can use a NeoPixel to provide additional information during logging. You will need to install the Adafruit NeoPixel library
 if you want to take advantage of this. By default, the NeoPixel needs to be connected to D13 (sharing the pin with the on-board red LED).
 
 Use the library manager filter text box to search for "Adafruit NeoPixel". Hover over the line which says "Adafruit NeoPixel Library"
@@ -115,41 +113,41 @@ and click "Install".
 
 ### SparkFun Ublox Library
 
-The [Arduino folder](Arduino) also contains an Arduino sketch called RAWX_Logger_F9P_I2C.
-This code is a little more experimental than the main Logger code, but is also more efficient. It uses the [SparkFun Ublox library](https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library)
-to communicate with the ZED-F9P over its I2C port. All of the message configuration is done over I2C, leaving the UART port clear for the RAWX
-messages themselves. This has the significant advantage that the UBX message acknowledgements go over I2C instead of UART, meaning
-there is no chance of accidentally logging them with the RAWX data.
+You need the [SparkFun U-blox GNSS v3 library](https://github.com/sparkfun/SparkFun_u-blox_GNSS_v3)
+to communicate with the ZED-F9x over its I2C port.
+All of the message configuration is done over I2C, leaving the UART port clear for the RAWX messages themselves.
 
-Use the library manager filter text box to search for "SparkFun Ublox". Hover over the line which says "SparkFun Ublox Library"
-and click "Install".
+Use the library manager filter text box to search for "SparkFun gnss".
+Hover over the line which says "SparkFun u-blox GNSS v3" and click "Install". Be carefull to select **version 3**.
+
+![SparkFun u-blox GNSS v3](img/arduino_ide_select_ublox_v3.png)
 
 You can now close the library manager.
 
-## Download RAWX_Logger_F9P
+## Download RAWX_Logger_F9x
 
 You can find the logger code in the [Arduino folder](Arduino)
 
 The best way to download the code is to clone the repository using GitHub Desktop. That way you can keep up to date with new versions.
 
 If you don't want to do that, you can use the use the green "Clone or download" button on the main repo page to "Download ZIP" instead.
-It depends on which browser you are using, but you should end up with a file called RAWX_Logger_F9P-master.zip in your
+It depends on which browser you are using, but you should end up with a file called RAWX_Logger_F9x-master.zip in your
 Downloads directory.
 
 - Open File Explorer (right-click on the Windows icon in the bottom left corner of your screen then click on "File Explorer")
 - Click on your "Downloads" quick access link
-- Double-click on the RAWX_Logger_F9P-master.zip file
-- Double-click on the RAWX_Logger_F9P-master folder
+- Double-click on the RAWX_Logger_F9x-master.zip file
+- Double-click on the RAWX_Logger_F9x-master folder
 - Double-click on the Arduino folder
-- Right-click on the RAWX_Logger_F9P folder and click "Copy"
+- Right-click on the RAWX_Logger_F9x folder and click "Copy"
 - Click on your "Documents" quick access link
 - Double-click on the "Arduino" folder
 - Right-click and select "Paste"
 
-All being well, you should now have a Documents\Arduino\RAWX_Logger_F9P folder containing (only) RAWX_Logger_F9P.ino
+All being well, you should now have a Documents\Arduino\RAWX_Logger_F9x folder containing (only) RAWX_Logger_F9x.ino
 
-In the Ardino IDE, click on the File menu and then "Open...". When the file window opens double-click on the RAWX_Logger_F9P folder
-and then double-click on the RAWX_Logger_F9P.ino file. The logger code will open in a new window. You can now close the Blink window.
+In the Ardino IDE, click on the File menu and then "Open...". When the file window opens double-click on the RAWX_Logger_F9x folder
+and then double-click on the RAWX_Logger_F9x.ino file. The logger code will open in a new window. You can now close the Blink window.
 
 ## Next > [HARDWARE.md](HARDWARE.md)
 
