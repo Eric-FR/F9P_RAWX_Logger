@@ -247,7 +247,7 @@ from day1 and day2 separately first and then combine the two day files together.
 You can then process a pair of base and rover files using [RTKLIB](http://rtkexplorer.com/downloads/rtklib-code/).
 
 
-## Next > [UBX.md](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/UBX.md)
+## Next > [UBX.md](UBX.md)
 
 
 
