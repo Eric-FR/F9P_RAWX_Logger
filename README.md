@@ -26,6 +26,10 @@ the F9P using the u-blox UBX binary protocol to enable and log the RAWX messages
 
 The [Arduino](Arduino) directory contains the Arduino code.
 
+## Warning/Firmware
+
+For F9R, fusion engine seems to be [unstable](https://portal.u-blox.com/s/question/0D52p0000DWg93fCQB/zed-f9r-stops-after-fusion-happens) with firmware 1.30. As of today (Dec. 2023), it is recommanded to stay with firmware 1.21.
+
 ## Licence
 
 This project is distributed under a Creative Commons Attribution + Share-alike (BY-SA) licence.
