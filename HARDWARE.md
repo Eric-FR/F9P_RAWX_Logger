@@ -182,6 +182,11 @@ Final state:
 
 ![F9P logger closed](img/F9P_logger_box.jpg)
 
+The use of the F9R with fusion engine needs a precise and reproducible positionning. DIY car (Dacia Lodgy) holder made by laser cutting: [SVG Model](img/F9R_holder.svg).
+
+![Box holder](img/holder_for_F9R.jpg)
+
+![Box holder](img/F9R_logger_with_holder.jpg)
 
 
 ## Testing
