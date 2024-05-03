@@ -8,17 +8,16 @@
 // F9K (Dead Reckoning without RTK) is not supported now
 // F9H (heading) is not supported now (also not by SparkFun u-blox GNSS Arduino Library v3?)
 // Default acquisition rate is 1 Hz
-// Priority navigation mode (F9R with ESF/IMU) is x4
 
 // Messages logged are:
 // RXM: RAWX (raw measurements) and SFRBX (satellites informations, not mandatory)
 // TIM: TM2 (Time mark data)
 // NAV: POSLLH, PVT, SAT; (STATUS for F9P in base mode: indicate a time fix for Survey_In mode) (ATT (attitude of the vehicle) and RELPOSNED (Relative positioning vs. reference station) for F9R in automotive mode)
-// ESF (F9R): RAW. STATUS and ALG (with autoalign activated)
-// NMEA (high precision mode): GGA, GSA, GST, GSV and RMC; (THS True Heading ans Status for F9R in Automotive mode) (no NMEA for F9P in base mode)
+// ESF (F9R): RAW, STATUS and ALG (with autoalign activated)
+// NMEA (high precision mode): GGA, GSA, GST, GSV and RMC; (THS True Heading and Status for F9R in Automotive mode) (GGA only for F9P in base mode)
 
 // Messages are also sent on UART2, for connection with a smartphone for exemple
-// NMEA (high precision mode): GGA, GGL, GSA, GST, GSV and RMC; (THS True Heading and Status for F9R in Automotive mode) (no NMEA for F9P in base mode)
+// NMEA (high precision mode): GGA, GLL, GSA, GST, GSV and RMC; (THS True Heading and Status for F9R in Automotive mode) (no NMEA for F9P in base mode)
 
 // This version uses the SparkFun u-blox library V3 by Nate Seidle to configure the F9P/F9R via I2C, leaving the UART dedicated for the messages to be logged to SD card
 // Feel like supporting open source hardware? Buy a board from SparkFun!
@@ -41,9 +40,6 @@
 // #define F9H // Comment this line out to use F9H
 
 #ifdef F9P
-//  #define SFE_UBLOX_DISABLE_ESF
-//  #define SFE_UBLOX_DISABLE_HNR
-
   #define ROVER_PORTABLE
 //  #define ROVER_STATIONARY
 //  #define ROVER_PEDESTRIAN
@@ -59,12 +55,16 @@
 #endif
 
 #ifdef F9R
-//  #define SFE_UBLOX_DISABLE_RTCM_LOGGING
-
 // choose rover model when activating HPS (high precision sensor fusion between GNSS & IMU -& Wheel tick-)
 #define ROVER_HPS_AUTOMOTIVE
 //  #define ROVER_HPS_RLM // robotic lawn mower
 //  #define ROVER_HPS_E_SCOOTER  
+
+// Priority navigation mode (F9R with ESF/IMU) between 0 and 30 Hz
+// At 30 Hz, BT connexion collapse. 
+// One may want to reduce the number of different types of NMEA messages send on UART2 to avoid this.
+
+const int PRIORITY_NAV_RATE = 4;
 
 // choose rover model when HPS is not activated
   #define ROVER_PORTABLE
@@ -411,10 +411,10 @@ uint8_t disableI2cNMEA() {
 uint8_t setNMEAon() {
   i2cGNSS.newCfgValset8(UBLOX_CFG_NMEA_MAINTALKERID, 0x03, VAL_LAYER_RAM);   // This line sets the main talker ID to GN
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GGA_UART1, 0x01);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GLL_UART1, 0x01);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSA_UART1, 0x01);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GST_UART1, 0x01);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSV_UART1, 0x01);
-  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GLL_UART1, 0x01);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_VTG_UART1, 0x01);
 #ifdef F9R  
   if (HPS_mode) {
@@ -429,10 +429,10 @@ uint8_t setNMEAon() {
 uint8_t setNMEAoff() {
   i2cGNSS.newCfgValset8(UBLOX_CFG_NMEA_MAINTALKERID, 0x01, VAL_LAYER_RAM);    // This line sets the main talker ID to GP
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GGA_UART1, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GLL_UART1, 0x00);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSA_UART1, 0x00);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GST_UART1, 0x00);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GSV_UART1, 0x00);
-  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_GLL_UART1, 0x00);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_VTG_UART1, 0x00);
 #ifdef F9R  
   if (HPS_mode) {
@@ -536,12 +536,12 @@ uint8_t disableSurveyIn() {
 // Set the value byte to 0x01 to send an RTCM message at RATE_MEAS; set the value to 0x04 to send an RTCM message at 1/4 RATE_MEAS
 // (i.e. assumes you will be logging RAWX data at 4 Hz. Adjust accordingly)
 uint8_t setRTCMon() {
-  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1005_UART2, 0x04, VAL_LAYER_RAM);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1077_UART2, 0x04);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1087_UART2, 0x04);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1127_UART2, 0x04);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1097_UART2, 0x04);
-  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1230_UART2, 0x28);
+  i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1005_UART2, 0x04, VAL_LAYER_RAM); // Stationary RTK Reference Station ARP
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1077_UART2, 0x04); // GPS MSM7
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1087_UART2, 0x04); // Glonass MSM7
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1097_UART2, 0x04); // Galileo MSM7
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1127_UART2, 0x04); // Beidou MSM7
+  return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1230_UART2, 0x28); // GLONASS code-phase biases
 }
 
 // Disable RTCM message output on UART2
@@ -550,8 +550,8 @@ uint8_t setRTCMoff() {
   i2cGNSS.newCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1005_UART2, 0x00, VAL_LAYER_RAM);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1077_UART2, 0x00);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1087_UART2, 0x00);
-  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1127_UART2, 0x00);
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1097_UART2, 0x00);
+  i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1127_UART2, 0x00);
   return i2cGNSS.sendCfgValset8(UBLOX_CFG_MSGOUT_RTCM_3X_TYPE1230_UART2, 0x00);
 }
 #endif
@@ -563,7 +563,7 @@ uint8_t setTimeGrid() {
 
 // Enable NMEA messages on UART2 for BlueTooth transmission (to smartphone for instance)
 uint8_t setUART2nmea() {
-  i2cGNSS.newCfgValset8(UBLOX_CFG_UART2OUTPROT_NMEA, 0x01, VAL_LAYER_RAM); // Enable default messages GGA, GLL, GSA, GSV, RMC, VTG (not clear if enable by default!!!)
+  i2cGNSS.newCfgValset8(UBLOX_CFG_UART2OUTPROT_NMEA, 0x01, VAL_LAYER_RAM); // Enable default messages GGA, GLL, GSA, GSV, RMC, VTG
 #ifdef F9R
   i2cGNSS.addCfgValset8(UBLOX_CFG_MSGOUT_NMEA_ID_THS_UART2, 0x01); // THS: True Heading and Status
 #endif  
@@ -966,6 +966,7 @@ void setup()
     HPS_mode = true; 
     Serial.println("HPS activated");
     i2cGNSS.setVal8(UBLOX_CFG_SFCORE_USE_SF, 0x01, VAL_LAYER_RAM); // enable sensor fusion
+    i2cGNSS.setVal8(UBLOX_CFG_SFODO_USE_WT_PIN, 0x00, VAL_LAYER_RAM); // disable wheel tick pin (F9R crash if not used. see https://portal.u-blox.com/s/question/0D52p0000DWg93fCQB/zed-f9r-stops-after-fusion-happens)
 #ifdef DEBUG
     Serial.print("IMU alignment before: "); Serial.print(i2cGNSS.getESFroll()); Serial.print(" "); Serial.print(i2cGNSS.getESFpitch()); Serial.print(" "); Serial.println(i2cGNSS.getESFyaw());
 #endif    
@@ -979,7 +980,6 @@ void setup()
 #ifdef ROVER_HPS_E_SCOOTER  
     setNAVescooter();
 #endif    
-
 #ifdef UseAutoAlign
     if (digitalRead(SurveyInPin) == LOW) {
       i2cGNSS.setESFAutoAlignment(true, VAL_LAYER_RAM);
@@ -1007,10 +1007,20 @@ void setup()
     else
     {
       Serial.println("No previous alignment loaded.");
-    };
+    }
 #endif    
 #ifdef DEBUG
     Serial.print("IMU alignment after: "); Serial.print(i2cGNSS.getESFroll()); Serial.print(" "); Serial.print(i2cGNSS.getESFpitch()); Serial.print(" "); Serial.println(i2cGNSS.getESFyaw());
+#endif    
+// note : activating "priority navigation mode" before fix give strange behavior at the next step (i.e. loop_step == init) with strange values for i2cGNSS.getHour and following
+// From F9R intezgration manual :
+// The ZED-F9R requires an initialization phase if the sensors have not been calibrated. During
+// this initialization, the receiver delivers GNSS-only navigation solution data, still ensuring high-
+// rate and low-latency output. The ZED-F9R works optimally in priority navigation mode when the
+// IMU and WT sensors have been calibrated, and the alignment angles are correct.
+  i2cGNSS.setVal8(UBLOX_CFG_RATE_NAV_PRIO, 0); //Disable of priority navigation mode messages
+#ifdef DEBUG
+  Serial.println("Priority Navigation Mode desactivated");
 #endif    
   }
 #endif
@@ -1152,8 +1162,18 @@ void loop() // run over and over again
             }
           }
 #endif
+#ifdef F9R
+          if ((HPS_mode == true) and (PRIORITY_NAV_RATE>0)) {
+            i2cGNSS.setVal8(UBLOX_CFG_RATE_NAV_PRIO, PRIORITY_NAV_RATE); //Output rate of priority navigation mode messages; from 0 to 30
+#ifdef DEBUG
+            Serial.println("Priority Navigation Mode activated");
+#endif    
+          }
+#endif
           
           while(Serial1.available()){Serial1.read();} // Flush RX buffer to clear UBX acknowledgements
+
+
 
           // Now that Serial1 should be idle and the buffer empty, start TC3 interrupts to copy all new data into SerialBuffer
           // Set the timer interval to 10 * 10 / 230400 = 0.000434 secs (10 bytes * 10 bits (1 start, 8 data, 1 stop) at 230400 baud)
@@ -1202,7 +1222,7 @@ void loop() // run over and over again
   
       // filename is limited to 8.3 characters so use format: YYYYMMDD/b_HHMMSS.ubx or YYYYMMDD/r_HHMMSS.ubx
       rawx_filename[2] = yearT;
-      rawx_filename[3] = yearU;
+      rawx_filename[3] = yearU;                                                                    
       rawx_filename[4] = monT;
       rawx_filename[5] = monU;
       rawx_filename[6] = dayT;
