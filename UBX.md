@@ -287,12 +287,12 @@ every 250 milliseconds. The RX line goes high (3.3V) when idle. Check that the R
 end of each 250 millisecond interval. If the gaps are small, you may need to increase the UART baud rate higher than 230400 baud or decrease the RAWX
 measurement rate to 2 Hz or lower.
 
-![Serial.JPG](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/Serial.JPG)
+![Serial.JPG](img/Serial.JPG)
 
 Likewise, use your oscilloscope to monitor the red LED (digital pin 13). The red LED is on during SD card writes. Again the code must not be
 writing to the card continuously. There must be gaps between writes every 250 milliseconds.
 
-![SDwrite.JPG](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/SDwrite.JPG)
+![SDwrite.JPG](img/SDwrite.JPG)
 
 If the SD card is continously busy: replace your SD card with a faster one; decrease the RAWX measurement rate; or consider changing the SdFat clock speed
 by editing the line which says:
@@ -417,9 +417,9 @@ if (SerialBuffer.available()) {
 The interrupt service routine takes between 3 and 25 usec to execute depending on how many characters are available (0 to 10). This is a
 significant overhead given that the ISR runs every 434 usec, but it is a price worth paying to avoid having to edit RingBuffer.h.
 
-![TC3_ISR_1.JPG](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/TC3_ISR_1.JPG)
+![TC3_ISR_1.JPG](img/TC3_ISR_1.JPG)
 
-![TC3_ISR_2.JPG](https://github.com/PaulZC/F9P_RAWX_Logger/blob/master/img/TC3_ISR_2.JPG)
+![TC3_ISR_2.JPG](img/TC3_ISR_2.JPG)
 
 ## RAWX_Logger_F9P_I2C
 
